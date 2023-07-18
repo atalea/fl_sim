@@ -69,10 +69,7 @@ def federated_learning(num_selected_users, num_epochs, learning_rate, min_sample
     criterion = nn.CrossEntropyLoss()
 
     # Load the MNIST dataset
-    transform = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,))
-    ])
+    transform = transforms.ToTensor()
     train_dataset = datasets.MNIST(
         root='./data', train=True, transform=transform, download=True)
 
