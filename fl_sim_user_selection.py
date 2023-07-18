@@ -36,23 +36,22 @@ def train(model, train_loader, optimizer, criterion, num_epochs):
             optimizer.step()
             running_loss += loss.item()
 
-            _, predicted = outputs.max(1)
+            _, predicted = torch.max(outputs.data, 1)
             total += labels.size(0)
-            correct += predicted.eq(labels).sum().item()
+            correct += (predicted == labels).sum().item()
 
         accuracy = 100.0 * correct / total
         print(
             f"Epoch {epoch+1}: Loss = {running_loss/len(train_loader)}, Accuracy = {accuracy}%")
 
-# Function to randomly select users with a minimum number of samples
+# Function to randomly select a subset of users
 
 
-def select_users_with_minimum_samples(num_users, num_selected_users, min_samples, train_dataset):
-    user_indices = list(range(num_users))
+def select_users(pool_users, num_selected_users, min_samples, train_dataset):
     selected_users = []
 
     while len(selected_users) < num_selected_users:
-        user_index = random.choice(user_indices)
+        user_index = random.choice(pool_users)
         train_indices = torch.where(train_dataset.targets == user_index)[0]
 
         if len(train_indices) >= min_samples:
@@ -60,10 +59,18 @@ def select_users_with_minimum_samples(num_users, num_selected_users, min_samples
 
     return selected_users
 
+# Function for model aggregation
+
+
+def aggregate_models(global_model, local_models):
+    for global_param, local_params in zip(global_model.parameters(), zip(*[local_model.parameters() for local_model in local_models])):
+        global_param.data = torch.mean(torch.stack(
+            [local_param.data for local_param in local_params]), dim=0)
+
 # Simulate federated learning using the MNIST dataset
 
 
-def federated_learning(num_selected_users, num_epochs, learning_rate, min_samples):
+def federated_learning(num_users, num_selected_users, num_epochs, learning_rate, min_samples):
     # Create the global model
     global_model = Net()
     criterion = nn.CrossEntropyLoss()
@@ -73,42 +80,44 @@ def federated_learning(num_selected_users, num_epochs, learning_rate, min_sample
     train_dataset = datasets.MNIST(
         root='./data', train=True, transform=transform, download=True)
 
-    # Set the number of total users
-    num_users = len(train_dataset.targets.unique())
+    # Create a pool of user indices
+    pool_users = list(range(num_users))
 
-    # Select random subset of users for federated learning with a minimum number of samples
-    selected_users = select_users_with_minimum_samples(
-        num_users, num_selected_users, min_samples, train_dataset)
+    # Select a subset of users
+    selected_users = select_users(
+        pool_users, num_selected_users, min_samples, train_dataset)
 
     # Perform federated learning
     local_models = []
     for user_index in selected_users:
-        # Create a local copy of the global model
+        # Create a local model
         local_model = Net()
         local_model.load_state_dict(global_model.state_dict())
 
         # Get the local client data
         train_indices = torch.where(train_dataset.targets == user_index)[0]
-        train_data = torch.utils.data.Subset(train_dataset, train_indices)
-        train_loader = torch.utils.data.DataLoader(
-            train_data, batch_size=10, shuffle=True)
 
-        # Train the local model
-        train(local_model, train_loader, optim.SGD(
-            local_model.parameters(), lr=learning_rate), criterion, num_epochs)
+        # Check if the selected user has enough samples
+        if len(train_indices) >= min_samples:
+            train_data = torch.utils.data.Subset(train_dataset, train_indices)
+            train_loader = torch.utils.data.DataLoader(
+                train_data, batch_size=10, shuffle=True)
 
-        # Add the local model to the list
-        local_models.append(local_model)
+            # Train the local model
+            train(local_model, train_loader, optim.SGD(
+                local_model.parameters(), lr=learning_rate), criterion, num_epochs)
+
+            # Add the local model to the list
+            local_models.append(local_model)
 
     # Aggregate local models to update the global model
-    for global_param, local_params in zip(global_model.parameters(), zip(*[local_model.parameters() for local_model in local_models])):
-        global_param.data = torch.mean(torch.stack(
-            [local_param.data for local_param in local_params]), dim=0)
+    aggregate_models(global_model, local_models)
 
     return global_model
 
 
 # Set the parameters for federated learning
+num_users = 100
 num_selected_users = 10
 num_epochs = 5
 learning_rate = 0.01
@@ -116,4 +125,4 @@ min_samples = 100
 
 # Run federated learning
 global_model = federated_learning(
-    num_selected_users, num_epochs, learning_rate, min_samples)
+    num_users, num_selected_users, num_epochs, learning_rate, min_samples)
