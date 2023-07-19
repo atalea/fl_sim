@@ -41,7 +41,7 @@ def train(model, train_loader, optimizer, criterion, num_epochs):
 
         accuracy = 100.0 * correct / total
         print(
-            f"Epoch {epoch+1}: Loss = {running_loss/len(train_loader)}, Accuracy = {accuracy}%")
+            f"Epoch {epoch+1}: Loss = {running_loss/len(train_loader):0.2f}, Accuracy = {accuracy:0.2f}%")
 
 # Simulate federated learning using the MNIST dataset
 
