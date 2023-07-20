@@ -89,17 +89,17 @@ def federated_learning(num_clients, num_epochs, learning_rate):
 num_clients = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 num_epochs = 5
 learning_rate = 0.01
-subset_size = 5
+selected_users = 5
 
 
 def user_selection(num_clients, subset_size):
     if subset_size >= len(num_clients):
         return num_clients
 
-    subset = random.sample(num_clients, subset_size)
+    subset = random.sample(num_clients, selected_users)
     return subset
 
 
 # Run federated learning
 global_model = federated_learning(user_selection(
-    num_clients, subset_size), num_epochs, learning_rate)
+    num_clients, selected_users), num_epochs, learning_rate)
