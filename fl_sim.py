@@ -92,7 +92,7 @@ learning_rate = 0.01
 subset_size = 5
 
 
-def select_subset(num_clients, subset_size):
+def user_selection(num_clients, subset_size):
     if subset_size >= len(num_clients):
         return num_clients
 
@@ -101,5 +101,5 @@ def select_subset(num_clients, subset_size):
 
 
 # Run federated learning
-global_model = federated_learning(select_subset(
+global_model = federated_learning(user_selection(
     num_clients, subset_size), num_epochs, learning_rate)
