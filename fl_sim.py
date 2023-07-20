@@ -86,12 +86,14 @@ def federated_learning(num_clients, num_epochs, learning_rate):
 
 
 # Set the parameters for federated learning
-num_clients = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+num_clients = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+               11, 12, 13, 14, 15, 16, 17, 18, 18, 20]
 num_epochs = 5
 learning_rate = 0.01
-selected_users = 5
+selected_users = 10
 
 
+# slect a random number of active users
 def user_selection(num_clients, selected_users):
     if selected_users >= len(num_clients):
         return num_clients
