@@ -61,8 +61,10 @@ def federated_learning(num_clients, num_epochs, learning_rate):
         train_dataset, [len(train_dataset) // len(num_clients)] * len(num_clients))
 
     # Perform federated learning
+    print(f'The random selected users are {num_clients}')
     for i in range(len(num_clients)):
         # Create a local copy of the global model
+        print(f"This is user {num_clients[i]}")
         local_model = Net()
         local_model.load_state_dict(global_model.state_dict())
 
