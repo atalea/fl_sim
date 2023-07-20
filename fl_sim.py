@@ -92,8 +92,8 @@ learning_rate = 0.01
 selected_users = 5
 
 
-def user_selection(num_clients, subset_size):
-    if subset_size >= len(num_clients):
+def user_selection(num_clients, selected_users):
+    if selected_users >= len(num_clients):
         return num_clients
 
     subset = random.sample(num_clients, selected_users)
