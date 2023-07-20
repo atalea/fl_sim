@@ -95,18 +95,21 @@ active_users = 5
 
 
 # slect a random number of active users
-def user_selection(num_clients, selected_users, active_users):
+def user_selection_fedAvg(num_clients, selected_users):
     if selected_users >= len(num_clients):
         return num_clients
 
     subset = random.sample(num_clients, selected_users)
+    return subset
 
-    if active_users >= len(subset):
-        return subset
-    active = random.sample(subset, active_users)
+
+def active_user(num_clients, active_users):
+    if active_users >= len(num_clients):
+        return num_clients
+    active = random.sample(num_clients, active_users)
     return active
 
 
 # Run federated learning
-global_model = federated_learning(user_selection(
-    num_clients, selected_users, active_users), num_epochs, learning_rate)
+global_model = federated_learning(user_selection_fedAvg(
+    num_clients, selected_users), num_epochs, learning_rate)
