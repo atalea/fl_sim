@@ -58,10 +58,10 @@ def federated_learning(num_clients, num_epochs, learning_rate):
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // num_clients] * num_clients)
+        train_dataset, [len(train_dataset) // len(num_clients)] * len(num_clients))
 
     # Perform federated learning
-    for i in range(num_clients):
+    for i in range(len(num_clients)):
         # Create a local copy of the global model
         local_model = Net()
         local_model.load_state_dict(global_model.state_dict())
