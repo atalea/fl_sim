@@ -64,12 +64,11 @@ def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
     # Perform federated learning
     for i in range(global_epochs):
         print(f'Global epoch # {i}')
+        active = active_user(clients, top_k)
+        print(f'Top K clients are: {active}')
 
-        for i in range(len(clients)):
-            # select active users
-            # active = active_users(num_clients, active_users)
-            # Create a local copy of the global model
-            # print(f"This is user {i+1}, their ID is: {clients[i]}")
+        for i in range(len(active)):
+            # print(f"This is user {i+1}, their ID is: {active[i]}")
             local_model = Net()
             local_model.load_state_dict(global_model.state_dict())
 
@@ -106,7 +105,7 @@ global_epochs = 2
 local_epochs = 5
 learning_rate = 0.01
 selected_users = 10
-active_users = 5
+top_k = 5
 
 
 # slect a random number of active users
@@ -118,10 +117,10 @@ def user_selection_fedAvg(clients, selected_users):
     return subset
 
 
-def active_user(clients, active_users):
-    if active_users >= len(clients):
+def active_user(clients, top_k):
+    if top_k >= len(clients):
         return clients
-    active = random.sample(clients, active_users)
+    active = random.sample(clients, top_k)
     return active
 
 
