@@ -61,15 +61,25 @@ def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
         train_dataset, [len(train_dataset) // len(clients)] * len(clients))
 
     print(f'The random selected users for FedAvg are {clients}')
+
     # Perform federated learning
     for i in range(global_epochs):
         print(f'Global epoch # {i}')
         # Select active clients for fedAvg
         active = active_user(clients, top_k)
-        print(f'Top active clients for FedAvg are: {active}')
+        transition_prob = wireless_channel_transition_probability(active)
+        successfull_users = []
+        for i in range(len(active)):
+            if transition_prob[i] in state_1:
+                successfull_users.append(active[i])
+
+            elif transition_prob[i] in state_0:
+                pass
+
+        print(f'Successfull clients for FedAvg are: {successfull_users}')
 
         # This is for the fedAvg training
-        for i in range(len(active)):
+        for i in range(len(successfull_users)):
             # print(f"This is user {i+1}, their ID is: {active[i]}")
             local_model = Net()
             local_model.load_state_dict(global_model.state_dict())
@@ -92,7 +102,7 @@ def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
 
     # select top K clients after indexing
     transition_prob = wireless_channel_transition_probability(active)
-    print(transition_prob)
+    # print(transition_prob)
 
     return global_model
 
@@ -123,6 +133,8 @@ local_epochs = 5
 learning_rate = 0.01
 selected_users = 10
 top_k = 5
+state_0 = [0.9449, 0.0087, 0.9913]
+state_1 = [0.0551, 0.8509, 0.1491]
 
 # slect a random number of active users
 
