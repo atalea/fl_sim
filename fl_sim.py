@@ -60,15 +60,15 @@ def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
     client_data = torch.utils.data.random_split(
         train_dataset, [len(train_dataset) // len(clients)] * len(clients))
 
-    print(f'The random selected users are {clients}')
+    print(f'The random selected users for FedAvg are {clients}')
     # Perform federated learning
     for i in range(global_epochs):
         print(f'Global epoch # {i}')
+        # Select active clients for fedAvg
         active = active_user(clients, top_k)
-        print(f'Top K clients are: {active}')
-        transition_prob = wireless_channel_transition_probability(active)
-        print(transition_prob)
+        print(f'Top active clients for FedAvg are: {active}')
 
+        # This is for the fedAvg training
         for i in range(len(active)):
             # print(f"This is user {i+1}, their ID is: {active[i]}")
             local_model = Net()
@@ -89,6 +89,10 @@ def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
         # Update the global model with the local model's parameters
         global_model.load_state_dict(local_model.state_dict())
         print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+
+    # select top K clients after indexing
+    transition_prob = wireless_channel_transition_probability(active)
+    print(transition_prob)
 
     return global_model
 
