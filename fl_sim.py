@@ -66,6 +66,8 @@ def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
         print(f'Global epoch # {i}')
         active = active_user(clients, top_k)
         print(f'Top K clients are: {active}')
+        transition_prob = wireless_channel_transition_probability(active)
+        print(transition_prob)
 
         for i in range(len(active)):
             # print(f"This is user {i+1}, their ID is: {active[i]}")
@@ -136,6 +138,18 @@ def active_user(clients, top_k):
         return clients
     active = random.sample(clients, top_k)
     return active
+
+# transition probability calculation
+
+
+def wireless_channel_transition_probability(clients):
+    states = [0.9449, 0.0087, 0.9913, 0.0551, 0.8509, 0.1491]
+    clients_state = []
+    for i in range(len(clients)):
+        temp = random.choice(states)
+        clients_state.append(temp)
+
+    return clients_state
 
 
 # Run federated learning
