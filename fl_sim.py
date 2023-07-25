@@ -22,9 +22,9 @@ class Net(nn.Module):
 # Function to train the model on local data and calculate accuracy
 
 
-def train(model, train_loader, optimizer, criterion, num_epochs):
+def train(model, train_loader, optimizer, criterion, local_epochs):
     model.train()
-    for epoch in range(num_epochs):
+    for epoch in range(local_epochs):
         running_loss = 0.0
         correct = 0
         total = 0
@@ -41,13 +41,13 @@ def train(model, train_loader, optimizer, criterion, num_epochs):
             correct += predicted.eq(labels).sum().item()
 
         accuracy = 100.0 * correct / total
-        print(
-            f"Epoch {epoch+1}: Loss = {running_loss/len(train_loader):0.2f}, Accuracy = {accuracy:0.2f}%")
+        # print(f"Epoch {epoch+1}: Loss = {running_loss/len(train_loader):0.2f}, Accuracy = {accuracy:0.2f}%")
+        return accuracy, float(loss)
 
 # Simulate federated learning using the MNIST dataset
 
 
-def federated_learning(num_clients, num_epochs, learning_rate):
+def federated_learning(clients, local_epochs, global_epochs,  learning_rate):
     # Create the global model
     global_model = Net()
     criterion = nn.CrossEntropyLoss()
@@ -58,58 +58,73 @@ def federated_learning(num_clients, num_epochs, learning_rate):
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // len(num_clients)] * len(num_clients))
+        train_dataset, [len(train_dataset) // len(clients)] * len(clients))
 
-    print(f'The random selected users are {num_clients}')
+    print(f'The random selected users are {clients}')
     # Perform federated learning
-    for i in range(len(num_clients)):
-        # Create a local copy of the global model
-        print(f"This is user {i+1}, their ID is: {num_clients[i]}")
-        local_model = Net()
-        local_model.load_state_dict(global_model.state_dict())
+    for i in range(global_epochs):
+        print(f'Global epoch # {i}')
 
-        # Get the local client data
-        train_data = client_data[i]
-        train_loader = torch.utils.data.DataLoader(
-            train_data, batch_size=10, shuffle=True)
+        for i in range(len(clients)):
+            # select active users
+            # active = active_users(num_clients, active_users)
+            # Create a local copy of the global model
+            # print(f"This is user {i+1}, their ID is: {clients[i]}")
+            local_model = Net()
+            local_model.load_state_dict(global_model.state_dict())
 
-        # Create an optimizer for the local model
-        optimizer = optim.SGD(local_model.parameters(), lr=learning_rate)
+            # Get the local client data
+            train_data = client_data[i]
+            train_loader = torch.utils.data.DataLoader(
+                train_data, batch_size=10, shuffle=True)
 
-        # Train the local model
-        train(local_model, train_loader, optimizer, criterion, num_epochs)
+            # Create an optimizer for the local model
+            optimizer = optim.SGD(local_model.parameters(), lr=learning_rate)
+
+            # Train the local model
+            acc, loss = train(local_model, train_loader,
+                              optimizer, criterion, local_epochs)
 
         # Update the global model with the local model's parameters
         global_model.load_state_dict(local_model.state_dict())
+        print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
 
     return global_model
 
 
 # Set the parameters for federated learning
-num_clients = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-               11, 12, 13, 14, 15, 16, 17, 18, 18, 20]
-num_epochs = 5
+def clients_pool(num_clients):
+    clients = []
+    for i in range(num_clients):
+        clients.append(i)
+    return clients
+
+
+num_clients = int(input('Please Enter the number of clients: '))
+clients = clients_pool(num_clients)
+global_epochs = 2
+local_epochs = 5
 learning_rate = 0.01
 selected_users = 10
 active_users = 5
 
 
 # slect a random number of active users
-def user_selection_fedAvg(num_clients, selected_users):
-    if selected_users >= len(num_clients):
-        return num_clients
+def user_selection_fedAvg(clients, selected_users):
+    if selected_users >= len(clients):
+        return clients
 
-    subset = random.sample(num_clients, selected_users)
+    subset = random.sample(clients, selected_users)
     return subset
 
 
-def active_user(num_clients, active_users):
-    if active_users >= len(num_clients):
-        return num_clients
-    active = random.sample(num_clients, active_users)
+def active_user(clients, active_users):
+    if active_users >= len(clients):
+        return clients
+    active = random.sample(clients, active_users)
     return active
 
 
 # Run federated learning
 global_model = federated_learning(user_selection_fedAvg(
-    num_clients, selected_users), num_epochs, learning_rate)
+    clients, selected_users), local_epochs, global_epochs, learning_rate)
