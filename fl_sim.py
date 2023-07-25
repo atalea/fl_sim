@@ -98,23 +98,37 @@ def clients_pool(num_clients):
         clients.append(i)
     return clients
 
+# assign power to clients
+
+
+def power(clients):
+    clients_power = []
+    for i in range(len(clients)):
+        rand = random.randint(1, 100)
+        clients_power.append(rand)
+    return clients_power
+
 
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
-global_epochs = 2
+clients_power = power(clients)
+global_epochs = 3
 local_epochs = 5
 learning_rate = 0.01
 selected_users = 10
 top_k = 5
 
-
 # slect a random number of active users
+
+
 def user_selection_fedAvg(clients, selected_users):
     if selected_users >= len(clients):
         return clients
 
     subset = random.sample(clients, selected_users)
     return subset
+
+# select subset from the random selected users
 
 
 def active_user(clients, top_k):
