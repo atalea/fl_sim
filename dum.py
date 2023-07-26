@@ -1,4 +1,5 @@
 import random
+import heapq
 
 
 def clients_pool(num_clients):
@@ -33,14 +34,16 @@ def clients_indexing(clients, transition_prob, clients_power):
     for i in range(len(clients)):
         if transition_prob[i] in state_0:
             v_i_t = -(state_1[1]/len(clients)) - \
-                ((state_1[0]*clients_power[i]/100))
+                (((state_1[0]*clients_power[i])/100))
             user_indices.append(v_i_t)
             # print(
             #     f'client {clients[i]}, is in state_0 with tratransition probability of {transition_prob[i]}')
         elif transition_prob[i] in state_1:
             v_i_t = -(state_0[1]/len(clients)) - \
-                ((state_0[0]*clients_power[i]/100))
+                (((state_0[0]*clients_power[i])/100))
             user_indices.append(v_i_t)
+    successfull_users = heapq.nlargest(top_k, user_indices)
+    print(f'the top {top_k} users who can transmit are: {successfull_users}')
     print('Indices are', user_indices)
     # print(
     #     f'client {clients[i]}, is in state_1 with tratransition probability of {transition_prob[i]}')
@@ -50,6 +53,7 @@ num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
 transition_prob = wireless_channel_transition_probability(clients)
+top_k = 5
 clients_indexing(clients, transition_prob, clients_power)
 # print((clients))
 # print(clients_power)
