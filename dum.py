@@ -50,18 +50,15 @@ def wireless_channel_transition_probability(clients):
         # print(clients_state)
 
 
-def clients_indexing(clients, transition_prob, clients_power):
-    state_0 = [0.9449, 0.0087, 0.9913]
-    state_1 = [0.0551, 0.8509, 0.1491]
+def clients_indexing(clients, clients_power):
     user_indices = []
     for i in range(len(clients)):
-        if transition_prob[i] in state_0:
+        if clients_state[i] == 1:
             v_i_t = -(state_1[1]/len(clients)) - \
                 (((state_1[0]*clients_power[i])/100))
             user_indices.append(v_i_t)
-            # print(
-            #     f'client {clients[i]}, is in state_0 with tratransition probability of {transition_prob[i]}')
-        elif transition_prob[i] in state_1:
+            print(f'client {clients[i]}, is in state {clients_state[i]}')
+        elif clients_state[i] == 0:
             v_i_t = -(state_0[1]/len(clients)) - \
                 (((state_0[0]*clients_power[i])/100))
             user_indices.append(v_i_t)
@@ -73,8 +70,7 @@ def clients_indexing(clients, transition_prob, clients_power):
     user_indices = np.argsort(user_indices)
     successfull_users = user_indices[-top_k:]
     print(f'the top {top_k} users who can transmit are: {successfull_users}')
-    # print(
-    #     f'client {clients[i]}, is in state_1 with tratransition probability of {transition_prob[i]}')
+    print(f'client {clients[i]}, is in state {clients_state[i]}')
 
 
 state_0 = [0.9449, 0.0087, 0.9913]
@@ -85,11 +81,15 @@ clients_state = []
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
+
 for i in range(global_epochs):
     print(f'Prev state {clients_state}')
     transition_prob = wireless_channel_transition_probability(clients)
     print(f'current state {clients_state}')
+    clients_indices = clients_indexing(clients, clients_state)
+    # print(f'Indexing {clients_indices}')
     print('\n')
+
 # clients_indexing(clients, transition_prob, clients_power)
 # print((clients))
 # print(clients_power)
