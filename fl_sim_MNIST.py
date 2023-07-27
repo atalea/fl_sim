@@ -86,6 +86,7 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
         # This is for the fedAvg training
         if (successfull_users == []):
             print('No user is able to transmit')
+            print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
         else:
 
             for i in range(len(successfull_users)):
@@ -149,6 +150,7 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
         # This is for the fedAvg training
         if (successfull_users == []):
             print('No user is able to transmit')
+            print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
         else:
 
             for i in range(len(successfull_users)):
