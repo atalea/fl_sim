@@ -80,7 +80,7 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
         print(clients_state)
         successfull_users = []
         for i in range(len(active)):
-            if clients_state[i] == 1:
+            if clients_state[i] == 0:
                 successfull_users.append(active[i])
 
         print(f'Successfull clients for FedAvg are: {successfull_users}')
@@ -147,7 +147,7 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
         print(clients_state)
         successfull_users = []
         for i in range(len(active)):
-            if clients_state[i] == 1:
+            if clients_state[i] == 0:
                 successfull_users.append(active[i])
 
         print(f'Successfull clients for IBCS are: {successfull_users}')
@@ -180,6 +180,7 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
             global_model.load_state_dict(local_model.state_dict())
             print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
     # print(transition_prob)
+    # collect the data (power, loss, acc) --> plot()
 
     return global_model
 
@@ -205,7 +206,7 @@ def power(clients):
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-global_epochs = 3
+global_epochs = 500
 local_epochs = 5
 learning_rate = 0.01
 selected_users = 10
@@ -269,20 +270,23 @@ def wireless_channel_transition_probability(clients):
         for i in range(len(clients)):
             rand_transision = random.random()
             if rand_transision <= state_0[0]:
+                print(f'random here is {rand_transision}')
                 clients_state.append(0)
             else:
+                print(f'random here is {rand_transision}')
                 clients_state.append(1)
     else:
         print('This is Not time 0')
         for i in range(len(clients)):
             rand_transision = random.random()
+            print(f'random here is {rand_transision}')
             if clients_state[i] == 0:
                 if rand_transision <= state_0[1]:
                     clients_state[i] = 1
                 else:
                     clients_state[i] = 0
             else:
-                if rand_transision <= state_1[2]:
+                if rand_transision <= state_0[2]:
                     clients_state[i] = 0
                 else:
                     clients_state[i] = 1
