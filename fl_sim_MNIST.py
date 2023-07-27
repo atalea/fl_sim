@@ -5,6 +5,7 @@ from torchvision import datasets, transforms
 import random
 import heapq
 import numpy as np
+import matplotlib.pyplot as plt
 
 # Define the model architecture
 
@@ -76,7 +77,7 @@ def test(model, test_loader, criterion):
 # This is FedAvg algorithm
 
 
-def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rate):
+def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     temp_power = []
     # Create the global model
     global_model = CNNModel()
@@ -87,11 +88,11 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
         [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
 
     train_dataset = datasets.MNIST(
-        root='./data', train=True, download=True, transform=trans_mnist)
+        root='./data/mnist', train=True, download=True, transform=trans_mnist)
     # print(f'trainf data leng is {len(train_dataset)}')
 
     test_dataset = torch.utils.data.DataLoader(
-        datasets.MNIST(root='./data', train=False, download=True,
+        datasets.MNIST(root='./data/mnist', train=False, download=True,
                        transform=transforms.ToTensor()),
         shuffle=False
     )
@@ -108,16 +109,20 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
     for i in range(global_epochs):
         print(f'Global epoch # {i}')
         # Select active clients for fedAvg
-        active = active_user(clients, top_k)
-        wireless_channel_transition_probability(active)
+        # print(len(clients))
+        wireless_channel_transition_probability(clients)
+        active = rand_active_user(clients, top_k)
+        # print(f'active users {active}')
         # print(f'client status{clients_state}')
         successfull_users = []
         for i in range(len(active)):
             if clients_state[active[i]] == 0:
-                successfull_users.append(active[i])
+                # print(f'active users {i} is {active[i]}')
+                successfull_users.append(clients_state[active[i]])
+                temp_power.append(0)
             # calculate non-successfull users power
             else:
-                temp_power.append(clients_power[active[i]])
+                temp_power.append(clients_power[i])
         # print(f'temp power {temp_power}')
         # print(f'Successfull clients for FedAvg are: {successfull_users}')
 
@@ -154,12 +159,12 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
             # print(f"Testing Loss: {test_loss:.2f}")
             fedavg_accu.append(test_accuracy)
             fedavg_loss.append(test_loss)
-            fedavg_power.append(temp_power)
+            fedavg_power.append(sum(temp_power)/len(temp_power))
 
     return global_model
 
 
-def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate):
+def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
     # Create the global model
     temp_power = []
     global_model = CNNModel()
@@ -170,11 +175,11 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
         [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
 
     train_dataset = datasets.MNIST(
-        root='./data', train=True, download=True, transform=trans_mnist)
+        root='./data/mnist', train=True, download=True, transform=trans_mnist)
     # print(f'trainf data leng is {len(train_dataset)}')
 
     test_dataset = torch.utils.data.DataLoader(
-        datasets.MNIST(root='./data', train=False, download=True,
+        datasets.MNIST(root='./data/mnist', train=False, download=True,
                        transform=transforms.ToTensor()),
         shuffle=False
     )
@@ -193,12 +198,14 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
         # Select active clients for top_k indexing algorithm
         wireless_channel_transition_probability(clients)
         active = clients_indexing(clients, clients_power)
+        # print(f'active users {active}')
         # print(f'active are {active}')
         # print(f'status {clients_state}')
         successfull_users = []
         for i in range(len(active)):
             if clients_state[active[i]] == 0:
-                successfull_users.append(active[i])
+                successfull_users.append(clients_state[active[i]])
+                temp_power.append(0)
             else:
                 temp_power.append(clients_power[active[i]])
         # print(f'temp power {temp_power}')
@@ -237,7 +244,7 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
             # print(f"Testing Loss: {test_loss:.2f}")
             ibcs_accu.append(test_accuracy)
             ibcs_loss.append(test_loss)
-            ibcs_power.append(temp_power)
+            ibcs_power.append(sum(temp_power)/len(temp_power))
     # print(transition_prob)
     # collect the data (power, loss, acc) --> plot()
 
@@ -262,14 +269,14 @@ def power(clients):
     return clients_power
 
 
+#################################################################################################
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-global_epochs = 2
-local_epochs = 2
-learning_rate = 0.01
-selected_users = 10
-top_k = 3
+global_epochs = 10
+local_epochs = 5
+learning_rate = 0.1
+top_k = 50
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
 clients_state = []
@@ -280,24 +287,25 @@ fedavg_power = []
 ibcs_accu = []
 ibcs_loss = []
 ibcs_power = []
-
+#################################################################################################
 # slect a random number of active users
 
 
-def user_selection_fedAvg(clients, selected_users):
-    if selected_users >= len(clients):
+def user_selection_fedAvg(clients, top_k):
+    if top_k >= len(clients):
         return clients
 
-    subset = random.sample(clients, selected_users)
+    subset = random.sample(clients, top_k)
     return subset
 
 # select subset from the random selected users for fedAvg
 
 
-def active_user(clients, top_k):
+def rand_active_user(clients, top_k):
     if top_k >= len(clients):
         return clients
     active = random.sample(clients, top_k)
+    # print(f'active users {len(active)}')
     return active
 
 # select top_k users
@@ -332,8 +340,9 @@ def clients_indexing(clients, clients_power):
 def wireless_channel_transition_probability(clients):
     temp = []
     if clients_state == []:
-        print('This is time 0')
+        # print('This is time 0')
         for i in range(len(clients)):
+            # print(f'clien stae {i}')
             rand_transision = random.random()
             if rand_transision <= state_0[0]:
                 # print(f'random here is {rand_transision}')
@@ -359,11 +368,11 @@ def wireless_channel_transition_probability(clients):
 
 
 # Run federated learning
-global_model = federated_learningFedAvg(user_selection_fedAvg(
-    clients, selected_users), local_epochs, global_epochs, learning_rate)
+global_model = federated_learningFedAvg(
+    local_epochs, global_epochs, learning_rate)
 
-print(f'fedavg accuracy {fedavg_accu: .2f}')
-print(f'fedavg loss {fedavg_loss: .2f}')
+print(f'fedavg accuracy {fedavg_accu}')
+print(f'fedavg loss {fedavg_loss}')
 print(f'fedavg power {fedavg_power}')
 
 
@@ -371,8 +380,41 @@ print(f'fedavg power {fedavg_power}')
 clients_state = []
 
 global_model = federated_learningIBCS(
-    clients, local_epochs, global_epochs, learning_rate)
+    local_epochs, global_epochs, learning_rate)
 
 print(f'ibcs accuracy {ibcs_accu}')
 print(f'ibcs loss {ibcs_loss}')
 print(f'ibcs power {ibcs_power}')
+
+
+def plot():
+    fig, ax = plt.subplots()
+    ax.plot(fedavg_accu)
+    ax.plot(ibcs_accu)
+
+    ax.set_title('Accuracy')
+    ax.legend(['FedAvg', 'IBCS'])
+    ax.xaxis.set_label_text('Gobal Epochs')
+    ax.yaxis.set_label_text('Accuracy in %')
+
+    fig, ax = plt.subplots()
+    ax.plot(fedavg_loss)
+    ax.plot(ibcs_loss)
+
+    ax.set_title('Loss')
+    ax.legend(['FedAvg', 'IBCS'])
+    ax.xaxis.set_label_text('Gobal Epochs')
+    ax.yaxis.set_label_text('Loss')
+
+    fig, ax = plt.subplots()
+    ax.plot(fedavg_power)
+    ax.plot(ibcs_power)
+
+    ax.set_title('Power')
+    ax.legend(['FedAvg', 'IBCS'])
+    ax.xaxis.set_label_text('Gobal Epochs')
+    ax.yaxis.set_label_text('Power')
+    plt.show()
+
+
+plot()
