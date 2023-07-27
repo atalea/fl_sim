@@ -9,15 +9,20 @@ import numpy as np
 # Define the model architecture
 
 
-class Net(nn.Module):
+class CNNModel(nn.Module):
     def __init__(self):
-        super(Net, self).__init__()
-        self.fc1 = nn.Linear(784, 64)
+        super(CNNModel, self).__init__()
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1, padding=1)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1, padding=1)
+        self.pool = nn.MaxPool2d(kernel_size=2, stride=2)
+        self.fc1 = nn.Linear(32 * 7 * 7, 64)
         self.fc2 = nn.Linear(64, 10)
 
     def forward(self, x):
-        x = x.view(-1, 784)
-        x = torch.relu(self.fc1(x))
+        x = self.pool(nn.functional.relu(self.conv1(x)))
+        x = self.pool(nn.functional.relu(self.conv2(x)))
+        x = x.view(-1, 32 * 7 * 7)
+        x = nn.functional.relu(self.fc1(x))
         x = self.fc2(x)
         return x
 
@@ -52,7 +57,7 @@ def train(model, train_loader, optimizer, criterion, local_epochs):
 
 def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rate):
     # Create the global model
-    global_model = Net()
+    global_model = CNNModel()
     criterion = nn.CrossEntropyLoss()
 
     # Load the MNIST dataset
@@ -78,20 +83,17 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
             if clients_state[i] == 1:
                 successfull_users.append(active[i])
 
-            else:
-                pass
-
         print(f'Successfull clients for FedAvg are: {successfull_users}')
 
         # This is for the fedAvg training
         if (successfull_users == []):
             print('No user is able to transmit')
-            print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+            # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
         else:
 
             for i in range(len(successfull_users)):
                 # print(f"This is user {i+1}, their ID is: {active[i]}")
-                local_model = Net()
+                local_model = CNNModel()
                 local_model.load_state_dict(global_model.state_dict())
 
                 # Get the local client data
@@ -116,12 +118,18 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
 
 def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate):
     # Create the global model
-    global_model = Net()
+    global_model = CNNModel()
     criterion = nn.CrossEntropyLoss()
 
     # Load the MNIST dataset
+    trans_mnist = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+
     train_dataset = datasets.MNIST(
-        root='./data', train=True, transform=transforms.ToTensor(), download=True)
+        '../data/', train=True, download=True, transform=trans_mnist)
+
+    test_dataset = datasets.MNIST(
+        '../data/', train=True, download=True, transform=trans_mnist)
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -142,20 +150,17 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
             if clients_state[i] == 1:
                 successfull_users.append(active[i])
 
-            else:
-                pass
-
         print(f'Successfull clients for IBCS are: {successfull_users}')
 
         # This is for the fedAvg training
         if (successfull_users == []):
             print('No user is able to transmit')
-            print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+            # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
         else:
 
             for i in range(len(successfull_users)):
                 # print(f"This is user {i+1}, their ID is: {active[i]}")
-                local_model = Net()
+                local_model = CNNModel()
                 local_model.load_state_dict(global_model.state_dict())
 
                 # Get the local client data
@@ -263,10 +268,7 @@ def wireless_channel_transition_probability(clients):
         print('This is time 0')
         for i in range(len(clients)):
             rand_transision = random.random()
-            temp.append(rand_transision)
-        # print(f'This is temp trans{temp}')
-        for i in range(len(temp)):
-            if temp[i] <= state_0[0] and temp[i] > state_1[0]:
+            if rand_transision <= state_0[0]:
                 clients_state.append(0)
             else:
                 clients_state.append(1)
@@ -274,17 +276,16 @@ def wireless_channel_transition_probability(clients):
         print('This is Not time 0')
         for i in range(len(clients)):
             rand_transision = random.random()
-            temp.append(rand_transision)
-        # print(f'This is temp trans{temp}')
-        for i in range(len(temp)):
-            if clients_state[i] == 0 and temp[i] >= state_0[1] and temp[i] < state_1[1]:
-                clients_state[i] = 1
-            elif clients_state[i] == 1 and temp[i] >= state_1[1]:
-                clients_state[i] = 1
-            elif clients_state[i] == 0 and temp[i] <= state_0[2] and temp[i] > state_1[2]:
-                clients_state[i] = 0
+            if clients_state[i] == 0:
+                if rand_transision <= state_0[1]:
+                    clients_state[i] = 1
+                else:
+                    clients_state[i] = 0
             else:
-                clients_state[i] = 0
+                if rand_transision <= state_1[2]:
+                    clients_state[i] = 0
+                else:
+                    clients_state[i] = 1
 
 
 # Run federated learning
