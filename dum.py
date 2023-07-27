@@ -19,13 +19,35 @@ def power(clients):
 
 
 def wireless_channel_transition_probability(clients):
-    states = [0.9449, 0.0087, 0.9913, 0.0551, 0.8509, 0.1491]
-    clients_state = []
-    for i in range(len(clients)):
-        temp = random.choice(states)
-        clients_state.append(temp)
+    temp = []
+    if clients_state == []:
+        print('This is time 0')
+        for i in range(len(clients)):
+            rand_transision = random.random()
+            temp.append(rand_transision)
+        print(f'This is temp trans{temp}')
+        for i in range(len(temp)):
+            if temp[i] <= state_0[0] and temp[i] > state_1[0]:
+                clients_state.append(0)
+            else:
+                clients_state.append(1)
+    else:
+        print('This is Not time 0')
+        for i in range(len(clients)):
+            rand_transision = random.random()
+            temp.append(rand_transision)
+        print(f'This is temp trans{temp}')
+        for i in range(len(temp)):
+            if clients_state[i] == 0 and temp[i] <= state_0[1] and temp[i] > state_1[1]:
+                clients_state[i] = 1
+            elif clients_state[i] == 1 and temp[i] <= state_1[1]:
+                clients_state[i] = 1
+            elif clients_state[i] == 0 and temp[i] <= state_0[2] and temp[i] > state_1[2]:
+                clients_state[i] = 0
+            else:
+                clients_state[i] = 0
 
-    return clients_state
+        # print(clients_state)
 
 
 def clients_indexing(clients, transition_prob, clients_power):
@@ -55,12 +77,21 @@ def clients_indexing(clients, transition_prob, clients_power):
     #     f'client {clients[i]}, is in state_1 with tratransition probability of {transition_prob[i]}')
 
 
+state_0 = [0.9449, 0.0087, 0.9913]
+state_1 = [0.0551, 0.8509, 0.1491]
+global_epochs = 2
+top_k = 2
+clients_state = []
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-transition_prob = wireless_channel_transition_probability(clients)
-top_k = 2
-clients_indexing(clients, transition_prob, clients_power)
+for i in range(global_epochs):
+    print(f'Prev state {clients_state}')
+    transition_prob = wireless_channel_transition_probability(clients)
+    print(transition_prob)
+    print(f'current state {clients_state}')
+    print('\n')
+# clients_indexing(clients, transition_prob, clients_power)
 # print((clients))
 # print(clients_power)
 # print(transition_prob)
