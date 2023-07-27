@@ -38,9 +38,9 @@ def wireless_channel_transition_probability(clients):
             temp.append(rand_transision)
         print(f'This is temp trans{temp}')
         for i in range(len(temp)):
-            if clients_state[i] == 0 and temp[i] <= state_0[1] and temp[i] > state_1[1]:
+            if clients_state[i] == 0 and temp[i] >= state_0[1] and temp[i] < state_1[1]:
                 clients_state[i] = 1
-            elif clients_state[i] == 1 and temp[i] <= state_1[1]:
+            elif clients_state[i] == 1 and temp[i] >= state_1[1]:
                 clients_state[i] = 1
             elif clients_state[i] == 0 and temp[i] <= state_0[2] and temp[i] > state_1[2]:
                 clients_state[i] = 0
@@ -88,7 +88,6 @@ clients_power = power(clients)
 for i in range(global_epochs):
     print(f'Prev state {clients_state}')
     transition_prob = wireless_channel_transition_probability(clients)
-    print(transition_prob)
     print(f'current state {clients_state}')
     print('\n')
 # clients_indexing(clients, transition_prob, clients_power)
