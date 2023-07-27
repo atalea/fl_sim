@@ -51,7 +51,28 @@ def train(model, train_loader, optimizer, criterion, local_epochs):
         # print(f"Epoch {epoch+1}: Loss = {running_loss/len(train_loader):0.2f}, Accuracy = {accuracy:0.2f}%")
         return accuracy, float(loss)
 
-# Simulate federated learning using the MNIST dataset
+# Function to test the global model
+
+
+def test(model, test_loader, criterion):
+    model.eval()  # Set the model to evaluation mode
+    running_loss = 0.0
+    correct = 0
+    total = 0
+
+    with torch.no_grad():  # Disable gradient calculation during testing
+        for inputs, labels in test_loader:
+            outputs = model(inputs)
+            loss = criterion(outputs, labels)
+            running_loss += loss.item()
+
+            _, predicted = outputs.max(1)
+            total += labels.size(0)
+            correct += predicted.eq(labels).sum().item()
+
+    accuracy = 100.0 * correct / total
+    average_loss = running_loss / len(test_loader)
+    return accuracy, average_loss
 # This is FedAvg algorithm
 
 
@@ -61,8 +82,19 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
     criterion = nn.CrossEntropyLoss()
 
     # Load the MNIST dataset
+    trans_mnist = transforms.Compose(
+        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+
     train_dataset = datasets.MNIST(
-        root='./data', train=True, transform=transforms.ToTensor(), download=True)
+        root='./data', train=True, download=True, transform=trans_mnist)
+    print(f'trainf data leng is {len(train_dataset)}')
+
+    test_dataset = torch.utils.data.DataLoader(
+        datasets.MNIST(root='./data', train=False, download=True,
+                       transform=transforms.ToTensor()),
+        shuffle=False
+    )
+    print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -111,7 +143,11 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
 
             # Update the global model with the local model's parameters
             global_model.load_state_dict(local_model.state_dict())
-            print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+            # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+            test_accuracy, test_loss = test(
+                global_model, test_dataset, criterion)
+            print(f"Testing Accuracy: {test_accuracy:.2f}%")
+            print(f"Testing Loss: {test_loss:.2f}")
 
     return global_model
 
@@ -126,10 +162,15 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
         [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
 
     train_dataset = datasets.MNIST(
-        '../data/', train=True, download=True, transform=trans_mnist)
+        root='./data', train=True, download=True, transform=trans_mnist)
+    print(f'trainf data leng is {len(train_dataset)}')
 
-    test_dataset = datasets.MNIST(
-        '../data/', train=True, download=True, transform=trans_mnist)
+    test_dataset = torch.utils.data.DataLoader(
+        datasets.MNIST(root='./data', train=False, download=True,
+                       transform=transforms.ToTensor()),
+        shuffle=False
+    )
+    print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -178,7 +219,11 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
 
             # Update the global model with the local model's parameters
             global_model.load_state_dict(local_model.state_dict())
-            print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+            # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
+            test_accuracy, test_loss = test(
+                global_model, test_dataset, criterion)
+            print(f"Testing Accuracy: {test_accuracy:.2f}%")
+            print(f"Testing Loss: {test_loss:.2f}")
     # print(transition_prob)
     # collect the data (power, loss, acc) --> plot()
 
@@ -214,6 +259,13 @@ top_k = 3
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
 clients_state = []
+
+fedavg_accu = []
+fedavg_loss = []
+fedavg_power = []
+ibcs_accu = []
+ibcs_loss = []
+ibcs_power = []
 
 # slect a random number of active users
 
@@ -293,8 +345,8 @@ def wireless_channel_transition_probability(clients):
 
 
 # Run federated learning
-global_model = federated_learningFedAvg(user_selection_fedAvg(
-    clients, selected_users), local_epochs, global_epochs, learning_rate)
+# global_model = federated_learningFedAvg(user_selection_fedAvg(
+#     clients, selected_users), local_epochs, global_epochs, learning_rate)
 
 # reset states before you start the second algorithm
 clients_state = []
