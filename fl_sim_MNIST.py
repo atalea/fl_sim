@@ -101,7 +101,7 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
     client_data = torch.utils.data.random_split(
         train_dataset, [len(train_dataset) // len(clients)] * len(clients))
 
-    print(f'The random selected users for FedAvg are {clients}')
+    # print(f'The random selected users for FedAvg are {clients}')
 
     # Perform federated learning
     print('This is FedAvg algorithm')
@@ -118,8 +118,8 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
             # calculate non-successfull users power
             else:
                 temp_power.append(clients_power[active[i]])
-        print(f'temp power {temp_power}')
-        print(f'Successfull clients for FedAvg are: {successfull_users}')
+        # print(f'temp power {temp_power}')
+        # print(f'Successfull clients for FedAvg are: {successfull_users}')
 
         # This is for the fedAvg training
         if (successfull_users == []):
@@ -150,8 +150,8 @@ def federated_learningFedAvg(clients, local_epochs, global_epochs,  learning_rat
             # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
             test_accuracy, test_loss = test(
                 global_model, test_dataset, criterion)
-            print(f"Testing Accuracy: {test_accuracy:.2f}%")
-            print(f"Testing Loss: {test_loss:.2f}")
+            # print(f"Testing Accuracy: {test_accuracy:.2f}%")
+            # print(f"Testing Loss: {test_loss:.2f}")
             fedavg_accu.append(test_accuracy)
             fedavg_loss.append(test_loss)
             fedavg_power.append(temp_power)
@@ -171,14 +171,14 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
 
     train_dataset = datasets.MNIST(
         root='./data', train=True, download=True, transform=trans_mnist)
-    print(f'trainf data leng is {len(train_dataset)}')
+    # print(f'trainf data leng is {len(train_dataset)}')
 
     test_dataset = torch.utils.data.DataLoader(
         datasets.MNIST(root='./data', train=False, download=True,
                        transform=transforms.ToTensor()),
         shuffle=False
     )
-    print(f'test data leng is {len(test_dataset)}')
+    # print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -193,16 +193,16 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
         # Select active clients for top_k indexing algorithm
         wireless_channel_transition_probability(clients)
         active = clients_indexing(clients, clients_power)
-        print(f'active are {active}')
-        print(f'status {clients_state}')
+        # print(f'active are {active}')
+        # print(f'status {clients_state}')
         successfull_users = []
         for i in range(len(active)):
             if clients_state[active[i]] == 0:
                 successfull_users.append(active[i])
             else:
                 temp_power.append(clients_power[active[i]])
-        print(f'temp power {temp_power}')
-        print(f'Successfull clients for ibcs are: {successfull_users}')
+        # print(f'temp power {temp_power}')
+        # print(f'Successfull clients for ibcs are: {successfull_users}')
 
         # This is for the fedAvg training
         if (successfull_users == []):
@@ -233,8 +233,8 @@ def federated_learningIBCS(clients, local_epochs, global_epochs,  learning_rate)
             # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
             test_accuracy, test_loss = test(
                 global_model, test_dataset, criterion)
-            print(f"Testing Accuracy: {test_accuracy:.2f}%")
-            print(f"Testing Loss: {test_loss:.2f}")
+            # print(f"Testing Accuracy: {test_accuracy:.2f}%")
+            # print(f"Testing Loss: {test_loss:.2f}")
             ibcs_accu.append(test_accuracy)
             ibcs_loss.append(test_loss)
             ibcs_power.append(temp_power)
@@ -342,7 +342,7 @@ def wireless_channel_transition_probability(clients):
                 # print(f'random here is {rand_transision}')
                 clients_state.append(1)
     else:
-        print('This is Not time 0')
+        # print('This is Not time 0')
         for i in range(len(clients)):
             rand_transision = random.random()
             # print(f'random here is {rand_transision}')
