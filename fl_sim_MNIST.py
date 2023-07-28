@@ -288,8 +288,8 @@ def power(clients):
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-global_epochs = 20
-local_epochs = 30
+global_epochs = 30
+local_epochs = 3
 learning_rate = 0.01
 top_k = 100
 state_0 = [0.9449, 0.0087, 0.9913]
