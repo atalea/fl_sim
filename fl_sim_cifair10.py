@@ -104,6 +104,9 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     train_dataset.targets = torch.tensor(train_dataset.targets)
     test_dataset.targets = torch.tensor(test_dataset.targets)
 
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=1, shuffle=True)
+
     # print(f'trainf data leng is {len(train_dataset)}')
 
     # print(f'test data leng is {len(test_dataset)}')
@@ -159,12 +162,13 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
                 # Train the local model
                 acc, loss = train(local_model, train_loader,
                                   optimizer, criterion, local_epochs)
+                # print(f'train acc {acc}, train loss {loss}')
 
             # Update the global model with the local model's parameters
             global_model.load_state_dict(local_model.state_dict())
             # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
             test_accuracy, test_loss = test(
-                global_model, test_dataset, criterion)
+                global_model, test_loader, criterion)
             # print(f"Testing Accuracy: {test_accuracy:.2f}%")
             # print(f"Testing Loss: {test_loss:.2f}")
             fedavg_accu.append(test_accuracy)
