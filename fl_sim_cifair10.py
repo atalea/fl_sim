@@ -11,22 +11,23 @@ import torch.nn.functional as F
 # Define the model architecture
 
 
-class CNNMnist(nn.Module):
+class CNNCifar(nn.Module):
     def __init__(self):
-        super(CNNMnist, self).__init__()
-        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)
-        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)
-        self.conv2_drop = nn.Dropout2d()
-        self.fc1 = nn.Linear(320, 50)
-        self.fc2 = nn.Linear(50, 10)
+        super(CNNCifar, self).__init__()
+        self.conv1 = nn.Conv2d(3, 6, 5)
+        self.pool = nn.MaxPool2d(2, 2)
+        self.conv2 = nn.Conv2d(6, 16, 5)
+        self.fc1 = nn.Linear(16 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120, 84)
+        self.fc3 = nn.Linear(84, 10)
 
     def forward(self, x):
-        x = F.relu(F.max_pool2d(self.conv1(x), 2))
-        x = F.relu(F.max_pool2d(self.conv2_drop(self.conv2(x)), 2))
-        x = x.view(-1, x.shape[1]*x.shape[2]*x.shape[3])
+        x = self.pool(F.relu(self.conv1(x)))
+        x = self.pool(F.relu(self.conv2(x)))
+        x = x.view(-1, 16 * 5 * 5)
         x = F.relu(self.fc1(x))
-        x = F.dropout(x, training=self.training)
-        x = self.fc2(x)
+        x = F.relu(self.fc2(x))
+        x = self.fc3(x)
         return F.log_softmax(x, dim=1)
 
 # Function to train the model on local data and calculate accuracy
@@ -82,22 +83,29 @@ def test(model, test_loader, criterion):
 def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     temp_power = []
     # Create the global model
-    global_model = CNNMnist()
+    global_model = CNNCifar()
     criterion = nn.CrossEntropyLoss()
 
-    # Load the MNIST dataset
-    trans_mnist = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    # Transformation for CIFAR-10 (RGB images)
+    trans_cifar = transforms.Compose([
+        transforms.ToTensor(),
+        # Normalize for RGB images
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
 
-    train_dataset = datasets.MNIST(
-        root='./data/mnist', train=True, download=True, transform=trans_mnist)
+    # Load CIFAR-10 dataset
+    train_dataset = datasets.CIFAR10(
+        root='./data/cifar10', train=True, download=True, transform=trans_cifar)
+
+    test_dataset = datasets.CIFAR10(
+        root='./data/cifar10', train=False, download=True, transform=trans_cifar)
+
+    # Convert target labels to tensors
+    train_dataset.targets = torch.tensor(train_dataset.targets)
+    test_dataset.targets = torch.tensor(test_dataset.targets)
+
     # print(f'trainf data leng is {len(train_dataset)}')
 
-    test_dataset = torch.utils.data.DataLoader(
-        datasets.MNIST(root='./data/mnist', train=False, download=True,
-                       transform=transforms.ToTensor()),
-        shuffle=False
-    )
     # print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
@@ -136,7 +144,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
 
             for i in range(len(successfull_users)):
                 # print(f"This is user {i+1}, their ID is: {active[i]}")
-                local_model = CNNMnist()
+                local_model = CNNCifar()
                 local_model.load_state_dict(global_model.state_dict())
 
                 # Get the local client data
@@ -169,22 +177,26 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
 def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
     # Create the global model
     temp_power = []
-    global_model = CNNMnist()
+    global_model = CNNCifar()
     criterion = nn.CrossEntropyLoss()
 
-    # Load the MNIST dataset
-    trans_mnist = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    # Transformation for CIFAR-10 (RGB images)
+    trans_cifar = transforms.Compose([
+        transforms.ToTensor(),
+        # Normalize for RGB images
+        transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+    ])
 
-    train_dataset = datasets.MNIST(
-        root='./data/mnist', train=True, download=True, transform=trans_mnist)
-    # print(f'trainf data leng is {len(train_dataset)}')
+    # Load CIFAR-10 dataset
+    train_dataset = datasets.CIFAR10(
+        root='./data/cifar10', train=True, download=True, transform=trans_cifar)
 
-    test_dataset = torch.utils.data.DataLoader(
-        datasets.MNIST(root='./data/mnist', train=False, download=True,
-                       transform=transforms.ToTensor()),
-        shuffle=False
-    )
+    test_dataset = datasets.CIFAR10(
+        root='./data/cifar10', train=False, download=True, transform=trans_cifar)
+
+    # Convert target labels to tensors
+    train_dataset.targets = torch.tensor(train_dataset.targets)
+    test_dataset.targets = torch.tensor(test_dataset.targets)
     # print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
@@ -221,7 +233,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
 
             for i in range(len(successfull_users)):
                 # print(f"This is user {i+1}, their ID is: {active[i]}")
-                local_model = CNNMnist()
+                local_model = CNNCifar()
                 local_model.load_state_dict(global_model.state_dict())
 
                 # Get the local client data
