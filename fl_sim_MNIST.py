@@ -86,19 +86,27 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     criterion = nn.CrossEntropyLoss()
 
     # Load the MNIST dataset
-    trans_mnist = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    # Transformation for MNIST (Grayscale images)
+    trans_mnist = transforms.Compose([
+        transforms.ToTensor(),
+        # Normalize for grayscale images
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
+    # Load MNIST dataset
     train_dataset = datasets.MNIST(
         root='./data/mnist', train=True, download=True, transform=trans_mnist)
-    # print(f'trainf data leng is {len(train_dataset)}')
 
-    test_dataset = torch.utils.data.DataLoader(
-        datasets.MNIST(root='./data/mnist', train=False, download=True,
-                       transform=transforms.ToTensor()),
-        shuffle=False
-    )
+    test_dataset = datasets.MNIST(
+        root='./data/mnist', train=False, download=True, transform=trans_mnist)
+
+    # Convert target labels to tensors
+    train_dataset.targets = torch.tensor(train_dataset.targets)
+    test_dataset.targets = torch.tensor(test_dataset.targets)
     # print(f'test data leng is {len(test_dataset)}')
+
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=test_bs, shuffle=True)
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -142,7 +150,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
                 # Get the local client data
                 train_data = client_data[i]
                 train_loader = torch.utils.data.DataLoader(
-                    train_data, batch_size=10, shuffle=True)
+                    train_data, batch_size=local_bs, shuffle=True)
 
                 # Create an optimizer for the local model
                 optimizer = optim.SGD(
@@ -156,7 +164,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
             global_model.load_state_dict(local_model.state_dict())
             # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
             test_accuracy, test_loss = test(
-                global_model, test_dataset, criterion)
+                global_model, test_loader, criterion)
             # print(f"Testing Accuracy: {test_accuracy:.2f}%")
             # print(f"Testing Loss: {test_loss:.2f}")
             fedavg_accu.append(test_accuracy)
@@ -173,18 +181,23 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
     criterion = nn.CrossEntropyLoss()
 
     # Load the MNIST dataset
-    trans_mnist = transforms.Compose(
-        [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    # Transformation for MNIST (Grayscale images)
+    trans_mnist = transforms.Compose([
+        transforms.ToTensor(),
+        # Normalize for grayscale images
+        transforms.Normalize((0.1307,), (0.3081,))
+    ])
 
+    # Load MNIST dataset
     train_dataset = datasets.MNIST(
         root='./data/mnist', train=True, download=True, transform=trans_mnist)
-    # print(f'trainf data leng is {len(train_dataset)}')
 
-    test_dataset = torch.utils.data.DataLoader(
-        datasets.MNIST(root='./data/mnist', train=False, download=True,
-                       transform=transforms.ToTensor()),
-        shuffle=False
-    )
+    test_dataset = datasets.MNIST(
+        root='./data/mnist', train=False, download=True, transform=trans_mnist)
+
+    # Convert target labels to tensors
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=test_bs)
     # print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
@@ -227,7 +240,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
                 # Get the local client data
                 train_data = client_data[i]
                 train_loader = torch.utils.data.DataLoader(
-                    train_data, batch_size=10, shuffle=True)
+                    train_data, batch_size=local_bs, shuffle=True)
 
                 # Create an optimizer for the local model
                 optimizer = optim.SGD(
@@ -241,7 +254,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
             global_model.load_state_dict(local_model.state_dict())
             # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
             test_accuracy, test_loss = test(
-                global_model, test_dataset, criterion)
+                global_model, test_loader, criterion)
             # print(f"Testing Accuracy: {test_accuracy:.2f}%")
             # print(f"Testing Loss: {test_loss:.2f}")
             ibcs_accu.append(test_accuracy)
@@ -282,7 +295,8 @@ top_k = 50
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
 clients_state = []
-
+local_bs = 10
+test_bs = 128
 fedavg_accu = []
 fedavg_loss = []
 fedavg_power = []

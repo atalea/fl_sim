@@ -105,7 +105,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     test_dataset.targets = torch.tensor(test_dataset.targets)
 
     test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=1, shuffle=True)
+        test_dataset, batch_size=len(test_dataset), shuffle=True)
 
     # print(f'trainf data leng is {len(train_dataset)}')
 
@@ -153,7 +153,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
                 # Get the local client data
                 train_data = client_data[i]
                 train_loader = torch.utils.data.DataLoader(
-                    train_data, batch_size=10, shuffle=True)
+                    train_data, batch_size=64, shuffle=True)
 
                 # Create an optimizer for the local model
                 optimizer = optim.SGD(
@@ -202,6 +202,12 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
     train_dataset.targets = torch.tensor(train_dataset.targets)
     test_dataset.targets = torch.tensor(test_dataset.targets)
     # print(f'test data leng is {len(test_dataset)}')
+    # Convert target labels to tensors
+    train_dataset.targets = torch.tensor(train_dataset.targets)
+    test_dataset.targets = torch.tensor(test_dataset.targets)
+
+    test_loader = torch.utils.data.DataLoader(
+        test_dataset, batch_size=len(test_dataset), shuffle=True)
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -243,7 +249,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
                 # Get the local client data
                 train_data = client_data[i]
                 train_loader = torch.utils.data.DataLoader(
-                    train_data, batch_size=10, shuffle=True)
+                    train_data, batch_size=64, shuffle=True)
 
                 # Create an optimizer for the local model
                 optimizer = optim.SGD(
@@ -257,7 +263,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
             global_model.load_state_dict(local_model.state_dict())
             # print(f'Global Accuracy {acc: .2f}, global loss {loss: .2f}')
             test_accuracy, test_loss = test(
-                global_model, test_dataset, criterion)
+                global_model, test_loader, criterion)
             # print(f"Testing Accuracy: {test_accuracy:.2f}%")
             # print(f"Testing Loss: {test_loss:.2f}")
             ibcs_accu.append(test_accuracy)
