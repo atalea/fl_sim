@@ -105,7 +105,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     test_dataset.targets = torch.tensor(test_dataset.targets)
 
     test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=len(test_dataset), shuffle=True)
+        test_dataset, batch_size=test_bs, shuffle=True)
 
     # print(f'trainf data leng is {len(train_dataset)}')
 
@@ -153,7 +153,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
                 # Get the local client data
                 train_data = client_data[i]
                 train_loader = torch.utils.data.DataLoader(
-                    train_data, batch_size=64, shuffle=True)
+                    train_data, batch_size=local_bs, shuffle=True)
 
                 # Create an optimizer for the local model
                 optimizer = optim.SGD(
@@ -207,7 +207,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
     test_dataset.targets = torch.tensor(test_dataset.targets)
 
     test_loader = torch.utils.data.DataLoader(
-        test_dataset, batch_size=len(test_dataset), shuffle=True)
+        test_dataset, batch_size=test_bs, shuffle=True)
 
     # Split the dataset into client data
     client_data = torch.utils.data.random_split(
@@ -249,7 +249,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
                 # Get the local client data
                 train_data = client_data[i]
                 train_loader = torch.utils.data.DataLoader(
-                    train_data, batch_size=64, shuffle=True)
+                    train_data, batch_size=local_bs, shuffle=True)
 
                 # Create an optimizer for the local model
                 optimizer = optim.SGD(
@@ -304,7 +304,8 @@ top_k = 50
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
 clients_state = []
-
+local_bs = 10
+test_bs = 128
 fedavg_accu = []
 fedavg_loss = []
 fedavg_power = []
