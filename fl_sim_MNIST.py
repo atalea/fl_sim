@@ -288,15 +288,17 @@ def power(clients):
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-global_epochs = 30
-local_epochs = 3
+global_epochs = 40
+local_epochs = 100
 learning_rate = 0.01
 top_k = 100
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
 clients_state = []
-local_bs = 128
-test_bs = 512
+
+local_bs = 10
+test_bs = 128
+
 fedavg_accu = []
 fedavg_loss = []
 fedavg_power = []
