@@ -391,20 +391,38 @@ def wireless_channel_transition_probability(clients):
                     clients_state[i] = 1
 
 
+# # Custom function for data splitting to ensure balanced subsets
+# # this is a normal data distribution
+# def custom_data_split(dataset, num_clients):
+#     num_samples = len(dataset)
+#     samples_per_client = num_samples // num_clients
+#     remainder = num_samples % num_clients
+
+#     client_data = []
+#     current_idx = 0
+
+#     for i in range(num_clients):
+#         client_size = samples_per_client + (1 if i < remainder else 0)
+#         indices = list(range(current_idx, current_idx + client_size))
+#         current_idx += client_size
+#         client_data.append(torch.utils.data.Subset(dataset, indices))
+
+#     return client_data
+
 # Custom function for data splitting to ensure balanced subsets
+# this is a uniform data distribution
 def custom_data_split(dataset, num_clients):
-    num_samples = len(dataset)
-    samples_per_client = num_samples // num_clients
-    remainder = num_samples % num_clients
+    # Get the total length of the dataset
+    total_length = len(dataset)
 
-    client_data = []
-    current_idx = 0
+    # Generate random starting indices for data splitting using uniform distribution
+    random_indices = sorted(random.sample(
+        range(total_length), num_clients - 1))
+    random_indices = [0] + random_indices + [total_length]
 
-    for i in range(num_clients):
-        client_size = samples_per_client + (1 if i < remainder else 0)
-        indices = list(range(current_idx, current_idx + client_size))
-        current_idx += client_size
-        client_data.append(torch.utils.data.Subset(dataset, indices))
+    # Split the dataset into client data using random indices
+    client_data = [torch.utils.data.Subset(dataset, list(
+        range(random_indices[i], random_indices[i + 1]))) for i in range(num_clients)]
 
     return client_data
 
