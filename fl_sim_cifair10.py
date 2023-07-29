@@ -107,13 +107,8 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
     test_loader = torch.utils.data.DataLoader(
         test_dataset, batch_size=test_bs, shuffle=True)
 
-    # print(f'trainf data leng is {len(train_dataset)}')
-
-    # print(f'test data leng is {len(test_dataset)}')
-
     # Split the dataset into client data
-    client_data = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // len(clients)] * len(clients))
+    client_data = custom_data_split(train_dataset, len(clients))
 
     # print(f'The random selected users for FedAvg are {clients}')
 
@@ -210,8 +205,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
         test_dataset, batch_size=test_bs, shuffle=True)
 
     # Split the dataset into client data
-    client_data = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // len(clients)] * len(clients))
+    client_data = custom_data_split(train_dataset, len(clients))
 
     # select top K clients after indexing
     print('\n')
@@ -297,15 +291,17 @@ def power(clients):
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-global_epochs = 20
-local_epochs = 30
+global_epochs = 10
+local_epochs = 100
 learning_rate = 0.01
-top_k = 50
+top_k = 100
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
 clients_state = []
+
 local_bs = 10
 test_bs = 128
+
 fedavg_accu = []
 fedavg_loss = []
 fedavg_power = []
@@ -391,6 +387,26 @@ def wireless_channel_transition_probability(clients):
                 else:
                     clients_state[i] = 1
 
+# Custom function for data splitting to ensure balanced subsets
+
+
+# Custom function for data splitting to ensure balanced subsets
+def custom_data_split(dataset, num_clients):
+    num_samples = len(dataset)
+    samples_per_client = num_samples // num_clients
+    remainder = num_samples % num_clients
+
+    client_data = []
+    current_idx = 0
+
+    for i in range(num_clients):
+        client_size = samples_per_client + (1 if i < remainder else 0)
+        indices = list(range(current_idx, current_idx + client_size))
+        current_idx += client_size
+        client_data.append(torch.utils.data.Subset(dataset, indices))
+
+    return client_data
+
 
 # Run federated learning
 global_model = federated_learningFedAvg(
@@ -421,6 +437,8 @@ def plot():
     ax.legend(['FedAvg', 'IBCS'])
     ax.xaxis.set_label_text('Gobal Epochs')
     ax.yaxis.set_label_text('Accuracy in %')
+    # plt.show()
+    plt.savefig('./results/Accuracy_CIFAIR10.png')
 
     fig, ax = plt.subplots()
     ax.plot(fedavg_loss)
@@ -430,6 +448,8 @@ def plot():
     ax.legend(['FedAvg', 'IBCS'])
     ax.xaxis.set_label_text('Gobal Epochs')
     ax.yaxis.set_label_text('Loss')
+    # plt.show()
+    plt.savefig('./results/Loss_CIFAIR10.png')
 
     fig, ax = plt.subplots()
     ax.plot(fedavg_power)
@@ -439,7 +459,8 @@ def plot():
     ax.legend(['FedAvg', 'IBCS'])
     ax.xaxis.set_label_text('Gobal Epochs')
     ax.yaxis.set_label_text('Power')
-    plt.show()
+    # plt.show()
+    plt.savefig('./results/Power_CIFAIR10.png')
 
 
 plot()
