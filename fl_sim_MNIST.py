@@ -109,8 +109,11 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
         test_dataset, batch_size=test_bs, shuffle=True)
 
     # Split the dataset into client data
-    client_data = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // len(clients)] * len(clients))
+    # client_data = torch.utils.data.random_split(
+    #     train_dataset, [len(train_dataset) // len(clients)] * len(clients))
+
+    # Split the dataset into client data
+    client_data = custom_data_split(train_dataset, len(clients))
 
     # print(f'The random selected users for FedAvg are {clients}')
 
@@ -169,7 +172,7 @@ def federated_learningFedAvg(local_epochs, global_epochs,  learning_rate):
             # print(f"Testing Loss: {test_loss:.2f}")
             fedavg_accu.append(test_accuracy)
             fedavg_loss.append(test_loss)
-            fedavg_power.append(sum(temp_power)/len(temp_power))
+            fedavg_power.append(sum(temp_power))
 
     return global_model
 
@@ -201,8 +204,11 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
     # print(f'test data leng is {len(test_dataset)}')
 
     # Split the dataset into client data
-    client_data = torch.utils.data.random_split(
-        train_dataset, [len(train_dataset) // len(clients)] * len(clients))
+    # client_data = torch.utils.data.random_split(
+    #     train_dataset, [len(train_dataset) // len(clients)] * len(clients))
+
+    # Split the dataset into client data
+    client_data = custom_data_split(train_dataset, len(clients))
 
     # select top K clients after indexing
     print('\n')
@@ -259,7 +265,7 @@ def federated_learningIBCS(local_epochs, global_epochs,  learning_rate):
             # print(f"Testing Loss: {test_loss:.2f}")
             ibcs_accu.append(test_accuracy)
             ibcs_loss.append(test_loss)
-            ibcs_power.append(sum(temp_power)/len(temp_power))
+            ibcs_power.append(sum(temp_power))
     # print(transition_prob)
     # collect the data (power, loss, acc) --> plot()
 
@@ -288,7 +294,7 @@ def power(clients):
 num_clients = int(input('Please Enter the number of clients: '))
 clients = clients_pool(num_clients)
 clients_power = power(clients)
-global_epochs = 40
+global_epochs = 10
 local_epochs = 100
 learning_rate = 0.01
 top_k = 100
@@ -385,6 +391,24 @@ def wireless_channel_transition_probability(clients):
                     clients_state[i] = 1
 
 
+# Custom function for data splitting to ensure balanced subsets
+def custom_data_split(dataset, num_clients):
+    num_samples = len(dataset)
+    samples_per_client = num_samples // num_clients
+    remainder = num_samples % num_clients
+
+    client_data = []
+    current_idx = 0
+
+    for i in range(num_clients):
+        client_size = samples_per_client + (1 if i < remainder else 0)
+        indices = list(range(current_idx, current_idx + client_size))
+        current_idx += client_size
+        client_data.append(torch.utils.data.Subset(dataset, indices))
+
+    return client_data
+
+
 # Run federated learning
 global_model = federated_learningFedAvg(
     local_epochs, global_epochs, learning_rate)
@@ -414,6 +438,8 @@ def plot():
     ax.legend(['FedAvg', 'IBCS'])
     ax.xaxis.set_label_text('Gobal Epochs')
     ax.yaxis.set_label_text('Accuracy in %')
+    # plt.show()
+    plt.savefig('./results/Accuracy_MNIST.png')
 
     fig, ax = plt.subplots()
     ax.plot(fedavg_loss)
@@ -423,6 +449,8 @@ def plot():
     ax.legend(['FedAvg', 'IBCS'])
     ax.xaxis.set_label_text('Gobal Epochs')
     ax.yaxis.set_label_text('Loss')
+    # plt.show()
+    plt.savefig('./results/Loss_MNIST.png')
 
     fig, ax = plt.subplots()
     ax.plot(fedavg_power)
@@ -432,7 +460,8 @@ def plot():
     ax.legend(['FedAvg', 'IBCS'])
     ax.xaxis.set_label_text('Gobal Epochs')
     ax.yaxis.set_label_text('Power')
-    plt.show()
+    # plt.show()
+    plt.savefig('./results/Power_MNIST.png')
 
 
 plot()
