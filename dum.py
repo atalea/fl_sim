@@ -24,28 +24,27 @@ def wireless_channel_transition_probability(clients):
         print('This is time 0')
         for i in range(len(clients)):
             rand_transision = random.random()
-            temp.append(rand_transision)
-        print(f'This is temp trans{temp}')
-        for i in range(len(temp)):
-            if temp[i] <= state_0[0] and temp[i] > state_1[0]:
+            if rand_transision <= state_0[0]:
+                print(f'random here is {rand_transision}')
                 clients_state.append(0)
             else:
+                print(f'random here is {rand_transision}')
                 clients_state.append(1)
     else:
         print('This is Not time 0')
         for i in range(len(clients)):
             rand_transision = random.random()
-            temp.append(rand_transision)
-        print(f'This is temp trans{temp}')
-        for i in range(len(temp)):
-            if clients_state[i] == 0 and temp[i] >= state_0[1] and temp[i] < state_1[1]:
-                clients_state[i] = 1
-            elif clients_state[i] == 1 and temp[i] >= state_1[1]:
-                clients_state[i] = 1
-            elif clients_state[i] == 0 and temp[i] <= state_0[2] and temp[i] > state_1[2]:
-                clients_state[i] = 0
+            print(f'random here is {rand_transision}')
+            if clients_state[i] == 0:
+                if rand_transision <= state_0[1]:
+                    clients_state[i] = 1
+                else:
+                    clients_state[i] = 0
             else:
-                clients_state[i] = 0
+                if rand_transision <= state_0[2]:
+                    clients_state[i] = 0
+                else:
+                    clients_state[i] = 1
 
         # print(clients_state)
 
@@ -62,15 +61,18 @@ def clients_indexing(clients, clients_power):
             v_i_t = -(state_0[1]/len(clients)) - \
                 (((state_0[0]*clients_power[i])/100))
             user_indices.append(v_i_t)
-    print('Indices are', user_indices)
+    # print('Indices are', user_indices)
     # this prints the top k values
     successfull_users = heapq.nlargest(top_k, user_indices)
-    print(f'the top {top_k} users who can transmit are: {successfull_users}')
+    # print(f'the top {top_k} users who can transmit are: {successfull_users}')
     # this prints the top k indices
     user_indices = np.argsort(user_indices)
     successfull_users = user_indices[-top_k:]
     print(f'the top {top_k} users who can transmit are: {successfull_users}')
-    print(f'client {clients[i]}, is in state {clients_state[i]}')
+    temp = []
+    for i in range(len(successfull_users)):
+        temp.append(clients_state[successfull_users[i]])
+    print(f'statust are {temp}')
 
 
 state_0 = [0.9449, 0.0087, 0.9913]
@@ -84,8 +86,9 @@ clients_power = power(clients)
 
 for i in range(global_epochs):
     print(f'Prev state {clients_state}')
-    transition_prob = wireless_channel_transition_probability(clients)
+    wireless_channel_transition_probability(clients)
     print(f'current state {clients_state}')
+    clients_state
     clients_indices = clients_indexing(clients, clients_state)
     # print(f'Indexing {clients_indices}')
     print('\n')
@@ -94,3 +97,8 @@ for i in range(global_epochs):
 # print((clients))
 # print(clients_power)
 # print(transition_prob)
+
+# collect wasted power for users who were selected but could not transmit
+# Change the model
+# Build FEMNIST
+# Build CIFAIR10
