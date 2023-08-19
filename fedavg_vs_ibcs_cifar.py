@@ -131,18 +131,18 @@ if __name__ == '__main__':
     args.local_ep = 1  # local epoch
     args.dataset = 'cifar'
 
-    if os.path.exists(f"./cifar_results/fedavg_acc_cifair10_lam_{lam}_k_{top_k}.txt"):
+    if os.path.exists(f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt"):
         os.remove(
-            f"./cifar_results/fedavg_acc_cifair10_lam_{lam}_k_{top_k}.txt")
+            f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt")
         os.remove(
-            f"./cifar_results/fedavg_loss_cifair10_lam_{lam}_k_{top_k}.txt")
+            f"./cifar_results/fedavg_loss_lam_{lam}_k_{top_k}.txt")
         os.remove(
-            f"./cifar_results/fedavg_power_cifair10_lam_{lam}_k_{top_k}.txt")
-        os.remove(f"./cifar_results/ibcs_acc_cifair10_lam_{lam}_k_{top_k}.txt")
+            f"./cifar_results/fedavg_power_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/ibcs_acc_lam_{lam}_k_{top_k}.txt")
         os.remove(
-            f"./cifar_results/ibcs_loss_cifair10_lam_{lam}_k_{top_k}.txt")
+            f"./cifar_results/ibcs_loss_lam_{lam}_k_{top_k}.txt")
         os.remove(
-            f"./cifar_results/ibcs_power_cifair10_lam_{lam}_k_{top_k}.txt")
+            f"./cifar_results/ibcs_power_lam_{lam}_k_{top_k}.txt")
 
         # acc_file_fedavg = open(
         #     f"./cifar_results/fedavg_acc_cifair10_lam_{lam}_k_{top_k}.txt", "a")
@@ -159,18 +159,18 @@ if __name__ == '__main__':
         #     f"./cifar_results/ibcs_power_cifair10_lam_{lam}_k_{top_k}.txt", "a")
     # else:
     acc_file_fedavg = open(
-        f"./cifar_results/fedavg_acc_cifair10_lam_{lam}_k_{top_k}.txt", "a")
+        f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt", "a")
     loss_file_fedavg = open(
-        f"./cifar_results/fedavg_loss_cifair10_lam_{lam}_k_{top_k}.txt", "a")
+        f"./cifar_results/fedavg_loss_lam_{lam}_k_{top_k}.txt", "a")
     power_file_fedavg = open(
-        f"./cifar_results/fedavg_power_cifair10_lam_{lam}_k_{top_k}.txt", "a")
+        f"./cifar_results/fedavg_power_lam_{lam}_k_{top_k}.txt", "a")
 
     acc_file_ibcs = open(
-        f"./cifar_results/ibcs_acc_cifair10_lam_{lam}_k_{top_k}.txt", "a")
+        f"./cifar_results/ibcs_acc_lam_{lam}_k_{top_k}.txt", "a")
     loss_file_ibcs = open(
-        f"./cifar_results/ibcs_loss_cifair10_lam_{lam}_k_{top_k}.txt", "a")
+        f"./cifar_results/ibcs_loss_lam_{lam}_k_{top_k}.txt", "a")
     power_file_ibcs = open(
-        f"./cifar_results/ibcs_power_cifair10_lam_{lam}_k_{top_k}.txt", "a")
+        f"./cifar_results/ibcs_power_lam_{lam}_k_{top_k}.txt", "a")
 
     # load dataset and split users
     if args.dataset == 'mnist':
