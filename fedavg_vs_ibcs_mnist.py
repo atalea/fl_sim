@@ -20,8 +20,8 @@ import os
 matplotlib.use('Agg')
 
 
-client_power = [73, 61, 64, 81, 64, 81, 68, 76, 62, 68, 64, 79, 79, 71, 63, 72, 66, 76, 66, 68, 71, 59, 63, 74, 71, 80, 77, 79, 67, 78, 71, 62, 65, 67, 63, 68, 74, 61, 78, 76, 66, 70, 70, 74, 65, 72, 73, 79,
-                75, 80, 67, 63, 64, 79, 69, 70, 73, 64, 78, 80, 68, 74, 71, 77, 72, 67, 74, 78, 78, 71, 73, 78, 73, 60, 76, 76, 77, 79, 71, 63, 64, 70, 75, 62, 65, 61, 63, 73, 66, 67, 78, 63, 70, 67, 71, 68, 74, 60, 62, 72]
+# client_power = [73, 61, 64, 81, 64, 81, 68, 76, 62, 68, 64, 79, 79, 71, 63, 72, 66, 76, 66, 68, 71, 59, 63, 74, 71, 80, 77, 79, 67, 78, 71, 62, 65, 67, 63, 68, 74, 61, 78, 76, 66, 70, 70, 74, 65, 72, 73, 79,
+#                 75, 80, 67, 63, 64, 79, 69, 70, 73, 64, 78, 80, 68, 74, 71, 77, 72, 67, 74, 78, 78, 71, 73, 78, 73, 60, 76, 76, 77, 79, 71, 63, 64, 70, 75, 62, 65, 61, 63, 73, 66, 67, 78, 63, 70, 67, 71, 68, 74, 60, 62, 72]
 accu_power_fedavg = 0
 accu_power_ibcs = 0
 clients_state = []
@@ -38,7 +38,6 @@ top_k = 20
 lam = 0.1
 print('States are:', '\n',  state_0, '\n', state_1,
       '\n', 'K= ', top_k, '\n', 'Lambda= ', lam)
-print('This is the last fix')
 
 
 def initilization(clients):
@@ -69,12 +68,12 @@ def wireless_channel_transition_probability(clients):
                 clients_state[i] = 1
 
 
-# def power(clients):
-#     clients_power = []
-#     for i in range(clients):
-#         rand = random.randint(1, 100)
-#         clients_power.append(rand)
-#     return clients_power
+def power(clients):
+    clients_power = []
+    for i in range(clients):
+        rand = random.randint(1, 100)
+        clients_power.append(rand)
+    return clients_power
 
 
 def clients_indexing(clients, clients_power):
@@ -127,7 +126,7 @@ if __name__ == '__main__':
     args.model = 'cnn'
 
     args.iid = True     # IID or non-IID
-    args.epochs = 100   # communication round
+    args.epochs = 1000   # communication round
     args.local_bs = 10  # local batch size
     args.local_ep = 1  # local epoch
 
@@ -219,8 +218,11 @@ if __name__ == '__main__':
     save_reconstructed = 1
     save_original = 1
     # clients_state.clear()
+    client_power = power(args.num_users)
+    # print(client_power)
     initilization(args.num_users)
-    # print('client_state are cleared every epoch')
+    print(f'Numper of global epochs = {args.epochs}')
+
     for iter in range(args.epochs):
         # clients_state.clear()
         w_locals, loss_locals = [], []
@@ -229,7 +231,7 @@ if __name__ == '__main__':
         idxs_users_ibcs = clients_indexing(args.num_users, client_power)
         wireless_channel_transition_probability(args.num_users)
         for idx in idxs_users_fedavg:
-            if (clients_state[idx] == 1):
+            if (clients_state[idx] == 0):
                 accu_power_fedavg += client_power[idx]
                 continue
             local = LocalUpdate(
@@ -266,7 +268,7 @@ if __name__ == '__main__':
         w_locals, loss_locals = [], []
         # idxs_users_ibcs = clients_indexing(args.num_users, client_power)
         for idx in idxs_users_ibcs:
-            if (clients_state[idx] == 1):
+            if (clients_state[idx] == 0):
                 accu_power_ibcs += client_power[idx]
                 continue
             local = LocalUpdate(
