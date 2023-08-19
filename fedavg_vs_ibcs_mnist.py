@@ -25,6 +25,8 @@ matplotlib.use('Agg')
 accu_power_fedavg = 0
 accu_power_ibcs = 0
 clients_state = []
+# successful, unsuccessful = 1, 0
+p00, p01, p11, p10 = 0.9913, 0.0087, 0.8509, 0.1491
 
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
@@ -46,10 +48,10 @@ def initilization(clients):
         rand_transision = random.random()
         if rand_transision <= 0.9449:  # state_0[0]:
             # print(f'random here is {rand_transision}')
-            clients_state.append(0)
+            clients_state.append(1)
         else:
             # print(f'random here is {rand_transision}')
-            clients_state.append(1)
+            clients_state.append(0)
 
 
 def wireless_channel_transition_probability(clients):
@@ -57,12 +59,12 @@ def wireless_channel_transition_probability(clients):
         rand_transision = random.random()
         # print(f'random here is {rand_transision}')
         if clients_state[i] == 0:
-            if rand_transision <= 0.0087:  # state_0[1]:
+            if rand_transision <= p01:  # state_0[1]:
                 clients_state[i] = 1
             else:
                 clients_state[i] = 0
         else:
-            if rand_transision <= 0.9913:  # state_0[2]:
+            if rand_transision <= p00:  # state_0[2]:
                 clients_state[i] = 0
             else:
                 clients_state[i] = 1
@@ -84,13 +86,13 @@ def clients_indexing(clients, clients_power):
     user_indices = []
     for i in range((clients)):
         if clients_state[i] == 1:
-            v_i_t = -(0.8509/(clients)) - \
-                (lam*((0.0087*clients_power[i])/100))
+            v_i_t = -(p11/(clients)) - \
+                (lam*((p10*clients_power[i])/100))
             user_indices.append(v_i_t)
             # print(f'client {clients[i]}, is in state {clients_state[i]}')
         elif clients_state[i] == 0:
-            v_i_t = -(0.1491/(clients)) - \
-                (lam*((0.9913*clients_power[i])/100))
+            v_i_t = -(p01/(clients)) - \
+                (lam*((p00*clients_power[i])/100))
             user_indices.append(v_i_t)
     # print('Indices are', user_indices)
     # this prints the top k values
