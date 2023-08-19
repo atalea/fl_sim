@@ -20,14 +20,20 @@ import os
 matplotlib.use('Agg')
 
 
-client_power = [73, 61, 64, 81, 64, 81, 68, 76, 62, 68, 64, 79, 79, 71, 63, 72, 66, 76, 66, 68, 71, 59, 63, 74, 71, 80, 77, 79, 67, 78, 71, 62, 65, 67, 63, 68, 74, 61, 78, 76, 66, 70, 70, 74, 65, 72, 73, 79,
-                75, 80, 67, 63, 64, 79, 69, 70, 73, 64, 78, 80, 68, 74, 71, 77, 72, 67, 74, 78, 78, 71, 73, 78, 73, 60, 76, 76, 77, 79, 71, 63, 64, 70, 75, 62, 65, 61, 63, 73, 66, 67, 78, 63, 70, 67, 71, 68, 74, 60, 62, 72]
+# client_power = [73, 61, 64, 81, 64, 81, 68, 76, 62, 68, 64, 79, 79, 71, 63, 72, 66, 76, 66, 68, 71, 59, 63, 74, 71, 80, 77, 79, 67, 78, 71, 62, 65, 67, 63, 68, 74, 61, 78, 76, 66, 70, 70, 74, 65, 72, 73, 79,
+#                 75, 80, 67, 63, 64, 79, 69, 70, 73, 64, 78, 80, 68, 74, 71, 77, 72, 67, 74, 78, 78, 71, 73, 78, 73, 60, 76, 76, 77, 79, 71, 63, 64, 70, 75, 62, 65, 61, 63, 73, 66, 67, 78, 63, 70, 67, 71, 68, 74, 60, 62, 72]
 accu_power_fedavg = 0
 accu_power_ibcs = 0
 clients_state = []
+# successful, unsuccessful = 1, 0
+p00 = 0.8509
+p10 = 0.0087
+p11 = 0.9913
+p01 = 0.1491
 
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
+
 # state_0 = [0.9449, 0.5, 0.5]
 # state_1 = [0.0551, 0.5, 0.5]
 # state_0 = [0.9449, 0.8, 0.2]
@@ -37,7 +43,6 @@ top_k = 20
 lam = 0.1
 print('States are:', '\n',  state_0, '\n', state_1,
       '\n', 'K= ', top_k, '\n', 'Lambda= ', lam)
-print('This is the last fix')
 
 
 def initilization(clients):
@@ -46,10 +51,10 @@ def initilization(clients):
         rand_transision = random.random()
         if rand_transision <= 0.9449:  # state_0[0]:
             # print(f'random here is {rand_transision}')
-            clients_state.append(0)
+            clients_state.append(1)
         else:
             # print(f'random here is {rand_transision}')
-            clients_state.append(1)
+            clients_state.append(0)
 
 
 def wireless_channel_transition_probability(clients):
@@ -57,23 +62,23 @@ def wireless_channel_transition_probability(clients):
         rand_transision = random.random()
         # print(f'random here is {rand_transision}')
         if clients_state[i] == 0:
-            if rand_transision <= 0.0087:  # state_0[1]:
+            if rand_transision <= p01:  # state_0[1]:
                 clients_state[i] = 1
             else:
                 clients_state[i] = 0
         else:
-            if rand_transision <= 0.9913:  # state_0[2]:
+            if rand_transision <= p10:  # state_0[2]:
                 clients_state[i] = 0
             else:
                 clients_state[i] = 1
 
 
-# def power(clients):
-#     clients_power = []
-#     for i in range(clients):
-#         rand = random.randint(1, 100)
-#         clients_power.append(rand)
-#     return clients_power
+def power(clients):
+    clients_power = []
+    for i in range(clients):
+        rand = random.randint(60, 80)
+        clients_power.append(rand)
+    return clients_power
 
 
 def clients_indexing(clients, clients_power):
@@ -84,13 +89,13 @@ def clients_indexing(clients, clients_power):
     user_indices = []
     for i in range((clients)):
         if clients_state[i] == 1:
-            v_i_t = -(0.8509/(clients)) - \
-                (lam*((0.0087*clients_power[i])/100))
+            v_i_t = -(p11/(clients)) - \
+                (lam*((p10*clients_power[i])/100))
             user_indices.append(v_i_t)
             # print(f'client {clients[i]}, is in state {clients_state[i]}')
         elif clients_state[i] == 0:
-            v_i_t = -(0.1491/(clients)) - \
-                (lam*((0.9913*clients_power[i])/100))
+            v_i_t = -(p01/(clients)) - \
+                (lam*((p00*clients_power[i])/100))
             user_indices.append(v_i_t)
     # print('Indices are', user_indices)
     # this prints the top k values
@@ -121,7 +126,8 @@ if __name__ == '__main__':
     args.device = torch.device('cuda:{}'.format(
         args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
-    args.dataset = 'mnist'
+    args.dataset = 'cifar'
+    print(f'dataset is {args.dataset}')
     args.num_channels = 1
     args.model = 'cnn'
 
@@ -129,35 +135,16 @@ if __name__ == '__main__':
     args.epochs = 100   # communication round
     args.local_bs = 10  # local batch size
     args.local_ep = 1  # local epoch
-    args.dataset = 'cifar'
 
     if os.path.exists(f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt"):
-        os.remove(
-            f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt")
-        os.remove(
-            f"./cifar_results/fedavg_loss_lam_{lam}_k_{top_k}.txt")
-        os.remove(
-            f"./cifar_results/fedavg_power_lam_{lam}_k_{top_k}.txt")
+
+        os.remove(f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/fedavg_loss_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/fedavg_power_lam_{lam}_k_{top_k}.txt")
         os.remove(f"./cifar_results/ibcs_acc_lam_{lam}_k_{top_k}.txt")
-        os.remove(
-            f"./cifar_results/ibcs_loss_lam_{lam}_k_{top_k}.txt")
-        os.remove(
-            f"./cifar_results/ibcs_power_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/ibcs_loss_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/ibcs_power_lam_{lam}_k_{top_k}.txt")
 
-        # acc_file_fedavg = open(
-        #     f"./cifar_results/fedavg_acc_cifair10_lam_{lam}_k_{top_k}.txt", "a")
-        # loss_file_fedavg = open(
-        #     f"./cifar_results/fedavg_loss_cifair10_lam_{lam}_k_{top_k}.txt", "a")
-        # power_file_fedavg = open(
-        #     f"./cifar_results/fedavg_power_cifair10_lam_{lam}_k_{top_k}.txt", "a")
-
-        # acc_file_ibcs = open(
-        #     f"./cifar_results/ibcs_acc_cifair10_lam_{lam}_k_{top_k}.txt", "a")
-        # loss_file_ibcs = open(
-        #     f"./cifar_results/ibcs_loss_cifair10_lam_{lam}_k_{top_k}.txt", "a")
-        # power_file_ibcs = open(
-        #     f"./cifar_results/ibcs_power_cifair10_lam_{lam}_k_{top_k}.txt", "a")
-    # else:
     acc_file_fedavg = open(
         f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt", "a")
     loss_file_fedavg = open(
@@ -236,9 +223,12 @@ if __name__ == '__main__':
     # To save or not
     save_reconstructed = 1
     save_original = 1
-
+    # clients_state.clear()
+    client_power = power(args.num_users)
+    # print(client_power)
     initilization(args.num_users)
-    # print('client_state are cleared every epoch')
+    print(f'Numper of global epochs = {args.epochs}')
+
     for iter in range(args.epochs):
         # clients_state.clear()
         w_locals, loss_locals = [], []
@@ -247,7 +237,7 @@ if __name__ == '__main__':
         idxs_users_ibcs = clients_indexing(args.num_users, client_power)
         wireless_channel_transition_probability(args.num_users)
         for idx in idxs_users_fedavg:
-            if (clients_state[idx] == 1):
+            if (clients_state[idx] == 0):
                 accu_power_fedavg += client_power[idx]
                 continue
             local = LocalUpdate(
@@ -284,7 +274,7 @@ if __name__ == '__main__':
         w_locals, loss_locals = [], []
         # idxs_users_ibcs = clients_indexing(args.num_users, client_power)
         for idx in idxs_users_ibcs:
-            if (clients_state[idx] == 1):
+            if (clients_state[idx] == 0):
                 accu_power_ibcs += client_power[idx]
                 continue
             local = LocalUpdate(
