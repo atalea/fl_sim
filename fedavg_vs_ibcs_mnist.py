@@ -26,7 +26,10 @@ accu_power_fedavg = 0
 accu_power_ibcs = 0
 clients_state = []
 # successful, unsuccessful = 1, 0
-p00, p01, p11, p10 = 0.9913, 0.0087, 0.8509, 0.1491
+p00 = 0.8509
+p10 = 0.0087
+p11 = 0.9913
+p01 = 0.1491
 
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
