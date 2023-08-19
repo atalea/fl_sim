@@ -28,6 +28,7 @@ clients_state = []
 
 state_0 = [0.9449, 0.0087, 0.9913]
 state_1 = [0.0551, 0.8509, 0.1491]
+
 # state_0 = [0.9449, 0.5, 0.5]
 # state_1 = [0.0551, 0.5, 0.5]
 # state_0 = [0.9449, 0.8, 0.2]
@@ -37,13 +38,14 @@ top_k = 20
 lam = 0.1
 print('States are:', '\n',  state_0, '\n', state_1,
       '\n', 'K= ', top_k, '\n', 'Lambda= ', lam)
+print('This is the last fix')
 
 
 def initilization(clients):
     for i in range(clients):
         # print(f'clien stae {i}')
         rand_transision = random.random()
-        if rand_transision <= state_0[0]:
+        if rand_transision <= 0.9449:  # state_0[0]:
             # print(f'random here is {rand_transision}')
             clients_state.append(0)
         else:
@@ -56,12 +58,12 @@ def wireless_channel_transition_probability(clients):
         rand_transision = random.random()
         # print(f'random here is {rand_transision}')
         if clients_state[i] == 0:
-            if rand_transision <= state_0[1]:
+            if rand_transision <= 0.0087:  # state_0[1]:
                 clients_state[i] = 1
             else:
                 clients_state[i] = 0
         else:
-            if rand_transision <= state_0[2]:
+            if rand_transision <= 0.9913:  # state_0[2]:
                 clients_state[i] = 0
             else:
                 clients_state[i] = 1
@@ -83,13 +85,13 @@ def clients_indexing(clients, clients_power):
     user_indices = []
     for i in range((clients)):
         if clients_state[i] == 1:
-            v_i_t = -(state_1[1]/(clients)) - \
-                (lam*((state_1[2]*clients_power[i])/100))
+            v_i_t = -(0.8509/(clients)) - \
+                (lam*((0.0087*clients_power[i])/100))
             user_indices.append(v_i_t)
             # print(f'client {clients[i]}, is in state {clients_state[i]}')
         elif clients_state[i] == 0:
-            v_i_t = -(state_0[1]/(clients)) - \
-                (lam*((state_0[2]*clients_power[i])/100))
+            v_i_t = -(0.1491/(clients)) - \
+                (lam*((0.9913*clients_power[i])/100))
             user_indices.append(v_i_t)
     # print('Indices are', user_indices)
     # this prints the top k values
@@ -222,9 +224,11 @@ if __name__ == '__main__':
     for iter in range(args.epochs):
         # clients_state.clear()
         w_locals, loss_locals = [], []
-        idxs_users = np.random.choice(
+        idxs_users_fedavg = np.random.choice(
             range(args.num_users), top_k, replace=False)
-        for idx in idxs_users:
+        idxs_users_ibcs = clients_indexing(args.num_users, client_power)
+        wireless_channel_transition_probability(args.num_users)
+        for idx in idxs_users_fedavg:
             if (clients_state[idx] == 1):
                 accu_power_fedavg += client_power[idx]
                 continue
@@ -260,8 +264,8 @@ if __name__ == '__main__':
         # clients_state.clear()
         # wireless_channel_transition_probability(args.num_users)
         w_locals, loss_locals = [], []
-        idxs_users = clients_indexing(args.num_users, client_power)
-        for idx in idxs_users:
+        # idxs_users_ibcs = clients_indexing(args.num_users, client_power)
+        for idx in idxs_users_ibcs:
             if (clients_state[idx] == 1):
                 accu_power_ibcs += client_power[idx]
                 continue
@@ -292,7 +296,7 @@ if __name__ == '__main__':
         acc_file_ibcs.write("%f \n" % (acc_test))
         loss_file_ibcs.write("%f \n" % (loss_test))
         power_file_ibcs.write("%f \n" % (accu_power_ibcs))
-        wireless_channel_transition_probability(args.num_users)
+        # wireless_channel_transition_probability(args.num_users)
 
 
 #######################################################################################
