@@ -126,7 +126,7 @@ if __name__ == '__main__':
     args.model = 'cnn'
 
     args.iid = True     # IID or non-IID
-    args.epochs = 1000   # communication round
+    args.epochs = 100   # communication round
     args.local_bs = 10  # local batch size
     args.local_ep = 1  # local epoch
 
