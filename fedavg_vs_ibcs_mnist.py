@@ -64,7 +64,7 @@ def wireless_channel_transition_probability(clients):
             else:
                 clients_state[i] = 0
         else:
-            if rand_transision <= p00:  # state_0[2]:
+            if rand_transision <= p10:  # state_0[2]:
                 clients_state[i] = 0
             else:
                 clients_state[i] = 1
