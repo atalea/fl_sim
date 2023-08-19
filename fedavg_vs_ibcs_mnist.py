@@ -76,7 +76,7 @@ def wireless_channel_transition_probability(clients):
 def power(clients):
     clients_power = []
     for i in range(clients):
-        rand = random.randint(1, 100)
+        rand = random.randint(60, 80)
         clients_power.append(rand)
     return clients_power
 
