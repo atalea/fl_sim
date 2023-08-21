@@ -233,7 +233,7 @@ if __name__ == '__main__':
     # copy weights
     w_glob_fedavg = net_glob_fedavg.state_dict()
     w_glob_ibcs = net_glob_ibcs.state_dict()
-    w_glob_pp = net_glob_ibcs.state_dict()
+    w_glob_pp = net_glob_pp.state_dict()
 
     # training
     # loss_train = []
@@ -339,7 +339,7 @@ if __name__ == '__main__':
         # idxs_users_ibcs = clients_indexing(args.num_users, client_power)
         for idx in idxs_users_pp:
             if (clients_state[idx] == 0):
-                accu_power_ibcs += client_power[idx]
+                accu_power_pp += client_power[idx]
                 continue
             local = LocalUpdate(
                 args=args, dataset=dataset_train, idxs=dict_users[idx])
@@ -353,7 +353,7 @@ if __name__ == '__main__':
         # print(len(w_glob_ibcs))
 
         # copy weight to net_glob_fedavg
-        net_glob_pp.load_state_dict(w_glob_ibcs)
+        net_glob_pp.load_state_dict(w_glob_pp)
 
         # print loss
         loss_avg = sum(loss_locals) / len(loss_locals)
