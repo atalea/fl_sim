@@ -154,6 +154,9 @@ if __name__ == '__main__':
         os.remove(f"./cifar_results/ibcs_acc_lam_{lam}_k_{top_k}.txt")
         os.remove(f"./cifar_results/ibcs_loss_lam_{lam}_k_{top_k}.txt")
         os.remove(f"./cifar_results/ibcs_power_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/pp_acc_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/pp_loss_lam_{lam}_k_{top_k}.txt")
+        os.remove(f"./cifar_results/pp_power_lam_{lam}_k_{top_k}.txt")
 
     acc_file_fedavg = open(
         f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt", "a")
