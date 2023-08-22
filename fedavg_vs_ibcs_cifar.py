@@ -24,6 +24,7 @@ matplotlib.use('Agg')
 #                 75, 80, 67, 63, 64, 79, 69, 70, 73, 64, 78, 80, 68, 74, 71, 77, 72, 67, 74, 78, 78, 71, 73, 78, 73, 60, 76, 76, 77, 79, 71, 63, 64, 70, 75, 62, 65, 61, 63, 73, 66, 67, 78, 63, 70, 67, 71, 68, 74, 60, 62, 72]
 accu_power_fedavg = 0
 accu_power_ibcs = 0
+accu_power_pp = 0
 clients_state = []
 # successful, unsuccessful = 1, 0
 p00 = 0.8509
@@ -99,14 +100,24 @@ def clients_indexing(clients, clients_power):
             user_indices.append(v_i_t)
     # print('Indices are', user_indices)
     # this prints the top k values
-    top_k_users = heapq.nlargest(top_k, user_indices)
-    # print(f'the top {top_k} users who can transmit are: {top_k_users}')
-    # this prints the top k indices
+    # top_k_users = heapq.nlargest(top_k, user_indices)
+    # This gives the top k user indices
     user_indices = np.argsort(user_indices)
     top_k_users = user_indices[-top_k:]
-    # print(len(top_k_users))
-    # print(f'the top {top_k} users who can transmit are: {top_k_users}')
-    # print(f'client {clients[i]}, is in state {clients_state[i]}')
+    return top_k_users
+
+
+def user_previous_prob(clients):
+    # previous state (0, 1) --> 0 un, 1 succ
+    succ_probabilities = []
+    for i in range(clients):
+        if clients_state[i] == 0:
+            succ_probabilities.append(p01)
+        else:
+            succ_probabilities.append(p11)
+    # This gives the top k user indices
+    succ_probabilities = np.argsort(succ_probabilities)
+    top_k_users = succ_probabilities[-top_k:]
     return top_k_users
 
 
@@ -127,7 +138,6 @@ if __name__ == '__main__':
         args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
 
     args.dataset = 'cifar'
-    print(f'dataset is {args.dataset}')
     args.num_channels = 1
     args.model = 'cnn'
 
@@ -158,6 +168,13 @@ if __name__ == '__main__':
         f"./cifar_results/ibcs_loss_lam_{lam}_k_{top_k}.txt", "a")
     power_file_ibcs = open(
         f"./cifar_results/ibcs_power_lam_{lam}_k_{top_k}.txt", "a")
+
+    acc_file_pp = open(
+        f"./cifar_results/pp_acc_lam_{lam}_k_{top_k}.txt", "a")
+    loss_file_pp = open(
+        f"./cifar_results/pp_loss_lam_{lam}_k_{top_k}.txt", "a")
+    power_file_pp = open(
+        f"./cifar_results/pp_power_lam_{lam}_k_{top_k}.txt", "a")
 
     # load dataset and split users
     if args.dataset == 'mnist':
@@ -191,9 +208,11 @@ if __name__ == '__main__':
     if args.model == 'cnn' and args.dataset == 'cifar':
         net_glob_fedavg = CNNCifar(args=args).to(args.device)
         net_glob_ibcs = CNNCifar(args=args).to(args.device)
+        net_glob_pp = CNNCifar(args=args).to(args.device)
     elif args.model == 'cnn' and args.dataset == 'mnist':
         net_glob_fedavg = CNNMnist(args=args).to(args.device)
         net_glob_ibcs = CNNMnist(args=args).to(args.device)
+        net_glob_pp = CNNMnist(args=args).to(args.device)
     elif args.model == 'mlp':
         len_in = 1
         for x in img_size:
@@ -202,15 +221,19 @@ if __name__ == '__main__':
                               dim_out=args.num_classes).to(args.device)
         net_glob_ibcs = MLP(dim_in=len_in, dim_hidden=200,
                             dim_out=args.num_classes).to(args.device)
+        net_glob_pp = MLP(dim_in=len_in, dim_hidden=200,
+                          dim_out=args.num_classes).to(args.device)
     else:
         exit('Error: unrecognized model')
     # print(net_glob_fedavg)
     net_glob_fedavg.train()
     net_glob_ibcs.train()
+    net_glob_pp.train()
 
     # copy weights
     w_glob_fedavg = net_glob_fedavg.state_dict()
     w_glob_ibcs = net_glob_ibcs.state_dict()
+    w_glob_pp = net_glob_pp.state_dict()
 
     # training
     # loss_train = []
@@ -235,7 +258,11 @@ if __name__ == '__main__':
         idxs_users_fedavg = np.random.choice(
             range(args.num_users), top_k, replace=False)
         idxs_users_ibcs = clients_indexing(args.num_users, client_power)
+        idxs_users_pp = user_previous_prob(args.num_users)
         wireless_channel_transition_probability(args.num_users)
+# ************************************************************************************************#
+        # FedAvg #
+
         for idx in idxs_users_fedavg:
             if (clients_state[idx] == 0):
                 accu_power_fedavg += client_power[idx]
@@ -267,10 +294,8 @@ if __name__ == '__main__':
         loss_file_fedavg.write("%f \n" % (loss_test))
         power_file_fedavg.write("%f \n" % (accu_power_fedavg))
 
-#######################################################################################
-
-        # clients_state.clear()
-        # wireless_channel_transition_probability(args.num_users)
+# ************************************************************************************************#
+        # ibcs #
         w_locals, loss_locals = [], []
         # idxs_users_ibcs = clients_indexing(args.num_users, client_power)
         for idx in idxs_users_ibcs:
@@ -307,6 +332,45 @@ if __name__ == '__main__':
         # wireless_channel_transition_probability(args.num_users)
 
 
+# ************************************************************************************************#
+        # pp #
+
+        w_locals, loss_locals = [], []
+        # idxs_users_ibcs = clients_indexing(args.num_users, client_power)
+        for idx in idxs_users_pp:
+            if (clients_state[idx] == 0):
+                accu_power_pp += client_power[idx]
+                continue
+            local = LocalUpdate(
+                args=args, dataset=dataset_train, idxs=dict_users[idx])
+            w, loss = local.train(net=copy.deepcopy(
+                net_glob_pp).to(args.device))
+
+            w_locals.append(copy.deepcopy(w))
+            loss_locals.append(copy.deepcopy(loss))
+        # update global weights
+        w_glob_pp = FedAvg(w_locals)
+        # print(len(w_glob_ibcs))
+
+        # copy weight to net_glob_fedavg
+        net_glob_pp.load_state_dict(w_glob_pp)
+
+        # print loss
+        loss_avg = sum(loss_locals) / len(loss_locals)
+        # print('Round {:3d}, Average loss {:.3f}'.format(iter, loss_avg))
+        # loss_train.append(loss_avg)
+
+        # Evaluate score
+        net_glob_pp.eval()
+        acc_test, loss_test = test_img(net_glob_pp, dataset_test, args)
+        print('Round {:3d} pp, Accuracy {:.3f}, Loss {:.3f}, Accum Power: {:.3f}'.format(
+            iter, acc_test, loss_test, accu_power_pp))
+        acc_file_pp.write("%f \n" % (acc_test))
+        loss_file_pp.write("%f \n" % (loss_test))
+        power_file_pp.write("%f \n" % (accu_power_pp))
+        # wireless_channel_transition_probability(args.num_users)
+
+
 #######################################################################################
 
     # testing
@@ -325,9 +389,20 @@ if __name__ == '__main__':
     print("IBCS Training loss: {:.2f}".format(loss_train))
     print("IBCS Testing accuracy: {:.2f}".format(acc_test))
 
+    # testing
+    net_glob_pp.eval()
+    acc_train, loss_train = test_img(net_glob_pp, dataset_train, args)
+    acc_test, loss_test = test_img(net_glob_pp, dataset_test, args)
+    print("IBCS Training accuracy: {:.2f}".format(acc_train))
+    print("IBCS Training loss: {:.2f}".format(loss_train))
+    print("IBCS Testing accuracy: {:.2f}".format(acc_test))
+
     acc_file_fedavg.close()
     loss_file_fedavg.close()
     power_file_fedavg.close()
     acc_file_ibcs.close()
     loss_file_ibcs.close()
     power_file_ibcs.close()
+    acc_file_pp.close()
+    loss_file_pp.close()
+    power_file_pp.close()
