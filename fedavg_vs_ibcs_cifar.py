@@ -142,9 +142,9 @@ if __name__ == '__main__':
     args.model = 'cnn'
 
     args.iid = True     # IID or non-IID
-    args.epochs = 100   # communication round
-    args.local_bs = 10  # local batch size
-    args.local_ep = 1  # local epoch
+    args.epochs = 1000   # communication round
+    args.local_bs = 32  # local batch size
+    args.local_ep = 10  # local epoch
 
     if os.path.exists(f"./cifar_results/fedavg_acc_lam_{lam}_k_{top_k}.txt"):
 
@@ -254,6 +254,8 @@ if __name__ == '__main__':
     # print(client_power)
     initilization(args.num_users)
     print(f'Numper of global epochs = {args.epochs}')
+    print(f'Number of local epochs = {args.local_ep}')
+    print(f'Batch size = {args.local_bs}')
 
     for iter in range(args.epochs):
         # clients_state.clear()
